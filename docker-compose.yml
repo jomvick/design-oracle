@@ -12,8 +12,8 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./analyses:/app/analyses
-      - ./clones:/app/clones
+      - ./analyses:/app/analyses:z
+      - ./clones:/app/clones:z
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -26,8 +26,8 @@ services:
     container_name: design-oracle-worker
     command: ["arq", "backend.worker.WorkerSettings"]
     volumes:
-      - ./analyses:/app/analyses
-      - ./clones:/app/clones
+      - ./analyses:/app/analyses:z
+      - ./clones:/app/clones:z
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
