@@ -28,18 +28,39 @@ Analyze any website and extract its complete design system — colors, typograph
 
 - Python 3.12+
 - Node.js 20+
-- Redis 7+
+- **Redis 7+** (required for the async job queue, `./start.sh` will fail without it)
 
-### Local Development
+### Redis
+
+Choose one option:
+
+**Option A — Docker (recommended)**
+```bash
+docker run -d --rm -p 6379:6379 redis:7-alpine
+```
+
+**Option B — Native install (Fedora)**
+```bash
+sudo dnf install redis
+redis-server --daemonize yes
+```
+
+**Option C — Full Docker Compose**
+```bash
+docker compose up --build -d
+```
+Then open http://localhost:3000 (no need for `./start.sh`).
+
+### Local Development (without Docker Compose)
 
 ```bash
-# 1. Start Redis
+# 1. Start Redis (one of the options above)
 docker run -d --rm -p 6379:6379 redis:7-alpine
 
-# 2. Backend + Worker
+# 2. Start backend + worker + frontend
 ./start.sh
 
-# 3. Frontend (separate terminal)
+# Or start frontend separately:
 cd frontend && npm run dev
 ```
 
