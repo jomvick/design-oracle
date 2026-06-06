@@ -12,9 +12,9 @@ next-env.d.ts
 
 # Project data
 analyses/*/
-clones/*/
 analyses/analyses.db
-analyses/*.db
+analyses/analyses.db-shm
+analyses/analyses.db-wal
 
 # OS
 .DS_Store
