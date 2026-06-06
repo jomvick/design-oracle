@@ -78,14 +78,14 @@ def clone(url: str, out_dir: str, max_assets=200):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "fr,en;q=0.9",
+        "Accept-Language": "en-US,en;q=0.9",
     })
 
     try:
         resp = session.get(url, timeout=30)
         resp.raise_for_status()
     except Exception as e:
-        return {"error": f"Impossible de télécharger {url}: {e}"}
+        return {"error": f"Failed to download {url}: {e}"}
 
     html = resp.text
     base_url = resp.url

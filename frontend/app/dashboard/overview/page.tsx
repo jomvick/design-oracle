@@ -984,7 +984,7 @@ function DashboardContent() {
                       }}
                     >
                       <div>
-                        <b>opencode</b> → ajouter à{" "}
+                        <b>opencode</b> → add to{" "}
                         <code
                           style={{
                             background: "rgba(255,255,255,0.03)",
