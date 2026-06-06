@@ -426,6 +426,21 @@ async def api_export_design_md(analyze_id: str):
         headers={"Content-Disposition": "attachment; filename=DESIGN.md"}
     )
 
+@app.delete("/api/analyze/{analyze_id}")
+async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db)):
+    from sqlalchemy import select
+    stmt = select(AnalysisModel).where(AnalysisModel.id == analyze_id)
+    res = await db.execute(stmt)
+    analysis = res.scalar_one_or_none()
+    if analysis:
+        await db.delete(analysis)
+        await db.commit()
+
+    d = ANALYSES_DIR / analyze_id
+    if d.exists():
+        shutil.rmtree(str(d))
+    return {"deleted": analyze_id}
+
 @app.get("/api/designs")
 async def api_designs(db: AsyncSession = Depends(get_db)):
     from sqlalchemy import select

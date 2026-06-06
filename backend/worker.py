@@ -107,11 +107,12 @@ async def run_analysis_task(ctx, analyze_id: str, url: str):
                 json.dumps(design_tokens, indent=2), encoding="utf-8"
             )
 
-        result_json = json.dumps(result, indent=2, default=str)
-        (d / "result.json").write_text(result_json, encoding="utf-8")
-
         md = generate_design_md(result)
         (d / "DESIGN.md").write_text(md, encoding="utf-8")
+        result["design_md"] = md
+
+        result_json = json.dumps(result, indent=2, default=str)
+        (d / "result.json").write_text(result_json, encoding="utf-8")
 
         # Update database with complete data
         async with AsyncSessionLocal() as session:

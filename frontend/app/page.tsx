@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getDesigns } from "@/lib/api";
+import { getDesigns, deleteAnalysis } from "@/lib/api";
 
 const PRESETS = [
   "https://stripe.com",
@@ -95,16 +95,27 @@ export default function HomePage() {
               <div className="history-empty">No analyses yet</div>
             ) : (
               designs.map((d) => (
-                <div
-                  key={d.id}
-                  className="history-item"
-                  onClick={() => router.push(`/dashboard/overview?id=${d.id}`)}
-                >
-                  <div className="info">
+                <div key={d.id} className="history-item">
+                  <div
+                    className="info"
+                    style={{ flex: 1, cursor: "pointer" }}
+                    onClick={() => router.push(`/dashboard/overview?id=${d.id}`)}
+                  >
                     {d.title || d.url || d.id}{" "}
                     <small>{d.style || ""}</small>
                   </div>
                   <span className="badge">{d.visual_score || ""}</span>
+                  <button
+                    className="delete-btn"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await deleteAnalysis(d.id);
+                      setDesigns((prev) => prev.filter((x) => x.id !== d.id));
+                    }}
+                    title="Delete"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))
             )}

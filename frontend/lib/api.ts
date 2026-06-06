@@ -53,6 +53,10 @@ export async function getAnalysisResult(id: string): Promise<AnalysisResult> {
   return res.json();
 }
 
+export async function deleteAnalysis(id: string): Promise<void> {
+  await fetch(`/api/analyze/${id}`, { method: "DELETE" });
+}
+
 export async function getDesigns(): Promise<{ id: string; title: string; url: string; style?: string; visual_score?: string }[]> {
   const res = await fetch("/api/designs");
   if (!res.ok) return [];

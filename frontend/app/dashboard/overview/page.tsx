@@ -46,7 +46,11 @@ function DashboardContent() {
   }, [id]);
 
   useEffect(() => {
-    if (!id || !activeQeTab) return;
+    if (!id || !activeQeTab || !data) return;
+    if (activeQeTab === "design-md" && data.design_md) {
+      setQeContent(data.design_md);
+      return;
+    }
     const tabEl = document.querySelector(`.qe-tab[data-qe="${activeQeTab}"]`);
     const url = tabEl?.getAttribute("data-url");
     if (url) {
@@ -55,7 +59,7 @@ function DashboardContent() {
         .then(setQeContent)
         .catch(() => setQeContent("Could not load content."));
     }
-  }, [id, activeQeTab]);
+  }, [id, activeQeTab, data]);
 
   const showToast = (msg: string) => {
     setToast(msg);
