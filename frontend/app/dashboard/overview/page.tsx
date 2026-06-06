@@ -1024,6 +1024,99 @@ function DashboardContent() {
                     </div>
                   </div>
                 </div>
+
+                <div
+                  className="dest-card hint-card"
+                  style={{
+                    gridColumn: "1 / -1",
+                    border: "1px solid var(--border)",
+                    cursor: "default",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      width: "100%",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>
+                      Agent Prompt — Give this to any AI agent
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--muted2)", lineHeight: 1.5 }}>
+                      Share this prompt with any MCP-compatible AI to let it autonomously use Design Oracle:
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        className="qe-action-btn"
+                        onClick={async () => {
+                          try {
+                            const prompt = `You have access to the Design Oracle MCP server with these tools:
+- analyze_website(url) — analyze a website's design system
+- get_status(id) — check analysis progress
+- get_result(id) — get complete analysis JSON
+- list_analyses() — list all completed analyses
+- export_design_md(id) — export DESIGN.md report
+- export_tailwind(id) — export Tailwind v4 config
+- export_components(id) — export React components JSX
+
+Workflow: analyze_website(url) → poll get_status(id) until "complete" → get_result(id) → export as needed.`;
+                            await navigator.clipboard.writeText(prompt);
+                            showToast("Prompt copied ✓");
+                          } catch {
+                            showToast("Failed to copy");
+                          }
+                        }}
+                      >
+                        <Copy size={13} /> Copy Prompt
+                      </button>
+                      <a
+                        className="qe-action-btn"
+                        href="/AGENT_PROMPT.md"
+                        target="_blank"
+                      >
+                        <Download size={13} /> View Full
+                      </a>
+                    </div>
+                    <pre
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        padding: "10px 12px",
+                        borderRadius: 6,
+                        fontSize: 10,
+                        overflowX: "auto",
+                        margin: 0,
+                        lineHeight: 1.6,
+                        color: "var(--muted2)",
+                      }}
+                    >
+{`You have access to the Design Oracle MCP server.
+
+## Available Tools
+- analyze_website(url) — Start analyzing a website
+- get_status(id) — Check analysis progress
+- get_result(id) — Get complete analysis JSON
+- list_analyses() — List all completed analyses
+- export_design_md(id) — Export DESIGN.md
+- export_tailwind(id) — Export Tailwind v4 config
+- export_components(id) — Export React components
+
+## Workflow
+1. analyze_website("https://example.com")
+2. Poll get_status(id) until status is "complete"
+3. get_result(id) for full data
+4. export_* functions as needed
+
+## Common Requests
+- "Analyze [URL] and summarize its design system"
+- "Extract colors and typography from [URL]"
+- "Generate a Tailwind config from this site"
+- "Create React components matching this UI"`}
+                    </pre>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
