@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+
+# Node / Next.js
+node_modules/
+.next/
+next-env.d.ts
+
+# Project data
+analyses/*/
+clones/*/
+analyses/analyses.db
+analyses/*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Docker
+.dockerignore

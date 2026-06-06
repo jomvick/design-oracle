@@ -1,0 +1,47 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: design-oracle-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: design-oracle-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./analyses:/app/analyses
+      - ./clones:/app/clones
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: design-oracle-worker
+    command: ["arq", "backend.worker.WorkerSettings"]
+    volumes:
+      - ./analyses:/app/analyses
+      - ./clones:/app/clones
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: design-oracle-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:5000
+    depends_on:
+      - api
+    restart: unless-stopped

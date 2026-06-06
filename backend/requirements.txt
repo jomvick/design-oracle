@@ -1,0 +1,14 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.0
+requests==2.*
+playwright==1.60.*
+beautifulsoup4==4.*
+Pillow==12.*
+tinycss2==1.*
+fastmcp>=2.0.0
+httpx>=0.28
+sqlalchemy>=2.0
+aiosqlite>=0.20
+arq>=0.25
+redis>=5.0

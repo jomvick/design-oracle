@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "design-oracle": {
+      "command": "python3",
+      "args": ["backend/mcp_server.py"],
+      "env": {
+        "DESIGN_ORACLE_URL": "http://localhost:5000"
+      }
+    }
+  }
+}
