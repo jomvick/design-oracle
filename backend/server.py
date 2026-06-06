@@ -146,36 +146,36 @@ async def api_clone(payload: ClonePayload):
 async def serve_clone_file(clone_id: str, subpath: str):
     d = CLONES_DIR / clone_id
     if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone introuvable")
+        raise HTTPException(status_code=404, detail="Clone not found")
     target_path = (d / subpath).resolve()
     # Security check to prevent directory traversal
     if not str(target_path).startswith(str(d.resolve())):
-        raise HTTPException(status_code=403, detail="Accès non autorisé")
+        raise HTTPException(status_code=403, detail="Access denied")
     if not target_path.exists() or not target_path.is_file():
-        raise HTTPException(status_code=404, detail="Fichier introuvable")
+        raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(str(target_path))
 
 @app.get("/clones/{clone_id}/raw/{subpath:path}")
 async def serve_raw_file(clone_id: str, subpath: str):
     d = CLONES_DIR / clone_id
     if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone introuvable")
+        raise HTTPException(status_code=404, detail="Clone not found")
     target_path = (d / subpath).resolve()
     # Security check to prevent directory traversal
     if not str(target_path).startswith(str(d.resolve())):
-        raise HTTPException(status_code=403, detail="Accès non autorisé")
+        raise HTTPException(status_code=403, detail="Access denied")
     if not target_path.exists() or not target_path.is_file():
-        raise HTTPException(status_code=404, detail="Fichier introuvable")
+        raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(str(target_path), media_type="text/plain")
 
 @app.get("/api/raw/{clone_id}")
 async def api_raw(clone_id: str):
     d = CLONES_DIR / clone_id
     if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone introuvable")
+        raise HTTPException(status_code=404, detail="Clone not found")
     index_file = d / "index.html"
     if not index_file.exists():
-        raise HTTPException(status_code=404, detail="index.html introuvable")
+        raise HTTPException(status_code=404, detail="index.html not found")
     return FileResponse(str(index_file), media_type="text/html")
 
 @app.get("/api/list")
@@ -195,7 +195,7 @@ async def api_list():
 async def api_save(clone_id: str, request: Request):
     d = CLONES_DIR / clone_id
     if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone introuvable")
+        raise HTTPException(status_code=404, detail="Clone not found")
     
     # Read raw body text
     body_bytes = await request.body()
@@ -208,7 +208,7 @@ async def api_save(clone_id: str, request: Request):
 async def api_export(clone_id: str):
     d = CLONES_DIR / clone_id
     if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone introuvable")
+        raise HTTPException(status_code=404, detail="Clone not found")
         
     def create_zip():
         import zipfile
