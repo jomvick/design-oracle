@@ -954,10 +954,10 @@ function DashboardContent() {
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: 13 }}>
-                      Serveur MCP disponible
+                      MCP Server Available
                     </div>
                     <div style={{ fontSize: 11, color: "var(--muted2)", lineHeight: 1.5 }}>
-                      Lancez d&apos;abord le serveur MCP (stdin/stdout) :
+                      First start the MCP server (stdin/stdout) :
                     </div>
                     <pre
                       style={{
@@ -973,7 +973,7 @@ function DashboardContent() {
                       {"\n"}python3 backend/mcp_server.py
                     </pre>
                     <div style={{ fontSize: 11, color: "var(--muted2)", lineHeight: 1.5 }}>
-                      Puis configurez votre outil :
+                      Then configure your tool :
                     </div>
                     <div
                       style={{
@@ -1008,9 +1008,9 @@ function DashboardContent() {
                           {`{"mcpServers":{"design-oracle":{"command":"python3","args":["backend/mcp_server.py"]}}}`}
                         </pre>
                       </div>
-                      <div>Claude Code / Codex / Cursor → idem dans leur config MCP</div>
+                      <div>Claude Code / Codex / Cursor → same in their MCP config</div>
                       <div>
-                        Avec Docker :{" "}
+                        With Docker :{" "}
                         <code
                           style={{
                             background: "rgba(255,255,255,0.03)",

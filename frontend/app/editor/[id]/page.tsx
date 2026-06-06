@@ -105,7 +105,7 @@ export default function EditorPage() {
     }
     const html = editor.getHtml();
     const css = editor.getCss();
-    const full = `<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<style>${css}</style>\n</head>\n<body>${html}\n</body>\n</html>`;
+    const full = `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<style>${css}</style>\n</head>\n<body>${html}\n</body>\n</html>`;
 
     try {
       const res = await fetch(`/api/save/${cloneId}`, { method: "POST", body: full });
