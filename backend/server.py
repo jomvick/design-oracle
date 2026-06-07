@@ -289,7 +289,7 @@ async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)
         pubsub = app.state.redis_client.pubsub()
         await pubsub.subscribe(f"analysis_events:{analyze_id}")
         
-        last_progress = db_analysis.progress
+        last_progress = -1
         try:
             while True:
                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)

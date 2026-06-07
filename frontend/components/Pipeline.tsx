@@ -22,7 +22,9 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export default function Pipeline({ currentStage, progress, detail }: PipelineProps) {
-  const currentIndex = PIPELINE_STEPS.indexOf(currentStage);
+  const isComplete = currentStage === "complete";
+  const isError = currentStage === "error";
+  const currentIndex = isComplete || isError ? PIPELINE_STEPS.length : PIPELINE_STEPS.indexOf(currentStage);
 
   return (
     <div className="analysis-left">
@@ -32,7 +34,8 @@ export default function Pipeline({ currentStage, progress, detail }: PipelinePro
           const cls = [
             "pstep",
             i === currentIndex ? "active" : "",
-            i < currentIndex ? "done" : "",
+            i < currentIndex || isComplete ? "done" : "",
+            isError && i === currentIndex ? "error" : "",
           ]
             .filter(Boolean)
             .join(" ");

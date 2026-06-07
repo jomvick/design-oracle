@@ -57,6 +57,7 @@ export function useAnalysisPipeline() {
             setPipelineStage(data.stage);
             setPipelineProgress(data.progress);
             setPipelineDetail(data.detail);
+            if (data.detail) addLog(data.detail);
           },
           () => {
             addLog("Analysis complete", "done");

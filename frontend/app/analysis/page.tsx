@@ -121,7 +121,7 @@ function AnalysisContent() {
                 transform: "translateX(-50%)",
               }}
             >
-              <button className="zen-btn-outline" onClick={handleGoToDashboard}>
+              <button className="zen-btn-outline" onClick={() => router.push(`/dashboard/overview?id=${currentId}`)}>
                 → View Dashboard
               </button>
             </motion.div>
