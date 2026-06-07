@@ -43,25 +43,22 @@ function AnalysisContent() {
     }
   }, [status, currentId]);
 
-  const handleGoToDashboard = () => {
-    if (currentId) {
-      router.push(`/dashboard/overview?id=${currentId}`);
+  useEffect(() => {
+    if (status === "complete" && currentId) {
+      const t = setTimeout(() => router.push(`/dashboard/overview?id=${currentId}`), 1500);
+      return () => clearTimeout(t);
     }
-  };
+  }, [status, currentId, router]);
 
   return (
     <div className="view active analysis-view">
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <div className="analysis-panel-left">
         <Pipeline
           currentStage={pipelineStage}
           progress={pipelineProgress}
           detail={pipelineDetail}
         />
-      </motion.div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -132,13 +129,9 @@ function AnalysisContent() {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <div className="analysis-panel-right">
         <Logs logs={logs} status={status} />
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -1,47 +1,78 @@
 #!/usr/bin/env bash
-set -e
+set -eo pipefail
 cd "$(dirname "$0")"
 
+VENV=".venv"
+
+# --- Virtual environment ---
 echo "Setting up virtual environment..."
-python3 -m venv .venv 2>/dev/null || true
-source .venv/bin/activate 2>/dev/null || true
+if [ ! -d "$VENV" ]; then
+  python3 -m venv "$VENV"
+fi
+source "$VENV/bin/activate"
 
+# --- Dependencies ---
 echo "Installing Python dependencies..."
-pip install -r backend/requirements.txt
+pip install -q -r backend/requirements.txt
 
-echo "Installing Playwright Chromium dependencies..."
+echo "Installing Playwright Chromium..."
 python3 -m playwright install chromium 2>/dev/null || true
 
-# Check if Redis is running
-if ! nc -z localhost 6379 2>/dev/null; then
-    echo "Redis is not running on port 6379. Attempting to start local redis-server..."
-    if command -v redis-server >/dev/null 2>&1; then
-        redis-server --daemonize yes
-        echo "Local redis-server started in daemon mode."
-    else
-        echo "WARNING: redis-server is not installed and no running Redis instance was found on port 6379."
-        echo "Please install Redis or ensure it is running for the background worker to function."
-    fi
+# --- Redis ---
+if nc -z localhost 6379 2>/dev/null; then
+  echo "Redis connection verified on port 6379."
+elif command -v redis-server >/dev/null 2>&1; then
+  echo "Starting local redis-server..."
+  redis-server --daemonize yes
+elif command -v docker >/dev/null 2>&1; then
+  echo "Starting Redis via Docker..."
+  docker rm -f design-oracle-redis 2>/dev/null || true
+  docker run -d --rm --name design-oracle-redis -p 6379:6379 redis:7-alpine
 else
-    echo "Redis connection verified on port 6379."
+  echo "ERROR: Redis is required. Install it or start a Docker container:"
+  echo "  docker run -d --rm -p 6379:6379 redis:7-alpine"
+  exit 1
 fi
 
-# Clean up background jobs on exit
-cleanup() {
-    echo "Stopping background worker..."
-    kill $WORKER_PID 2>/dev/null || true
-    echo "Stopping frontend dev server..."
-    kill $FRONTEND_PID 2>/dev/null || true
-}
-trap cleanup EXIT
+# --- Port checks ---
+if ss -tlnp | grep -q ':5000 '; then
+  echo "ERROR: Port 5000 already in use. Kill the process and retry:"
+  echo "  fuser -k 5000/tcp"
+  exit 1
+fi
+if ss -tlnp | grep -q ':3000 '; then
+  echo "WARNING: Port 3000 already in use — frontend may fail."
+fi
 
+# --- Cleanup ---
+cleanup() {
+  echo ""
+  echo "Stopping services..."
+  kill $WORKER_PID 2>/dev/null || true
+  kill $FRONTEND_PID 2>/dev/null || true
+  kill $SERVER_PID 2>/dev/null || true
+  wait $WORKER_PID $FRONTEND_PID $SERVER_PID 2>/dev/null || true
+  echo "All services stopped."
+}
+trap cleanup EXIT INT TERM
+
+# --- Start services ---
 echo "Starting background analysis worker..."
-arq backend.worker.WorkerSettings > arq_worker.log 2>&1 &
+"$VENV/bin/arq" backend.worker.WorkerSettings > arq_worker.log 2>&1 &
 WORKER_PID=$!
 
-echo "Starting Next.js frontend dev server..."
-npm run dev --prefix frontend > /dev/null 2>&1 &
+echo "Starting Next.js frontend (port 3000)..."
+API_URL=http://localhost:5000 npm run dev --prefix frontend > /tmp/frontend.log 2>&1 &
 FRONTEND_PID=$!
 
-echo "Starting FastAPI server..."
-python3 -m backend.server
+echo "Starting FastAPI server (port 5000)..."
+"$VENV/bin/uvicorn" backend.server:app --host 0.0.0.0 --port 5000 > /tmp/server.log 2>&1 &
+SERVER_PID=$!
+
+echo ""
+echo "  Frontend : http://localhost:3000"
+echo "  API      : http://localhost:5000"
+echo "  Logs     : tail -f /tmp/server.log /tmp/frontend.log arq_worker.log"
+echo ""
+echo "Press Ctrl+C to stop all services."
+wait

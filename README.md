@@ -24,53 +24,41 @@ Analyze any website and extract its complete design system — colors, typograph
 
 ## Quick Start
 
-### Prerequisites
+Choose one of the two methods below.
 
-- Python 3.12+
-- Node.js 20+
-- **Redis 7+** (required for the async job queue, `./start.sh` will fail without it)
-
-### Redis
-
-Choose one option:
-
-**Option A — Docker (recommended)**
-```bash
-docker run -d --rm -p 6379:6379 redis:7-alpine
-```
-
-**Option B — Native install (Fedora)**
-```bash
-sudo dnf install redis
-redis-server --daemonize yes
-```
-
-**Option C — Full Docker Compose**
-```bash
-docker compose up --build -d
-```
-Then open http://localhost:3000 (no need for `./start.sh`).
-
-### Local Development (without Docker Compose)
-
-```bash
-# 1. Start Redis (one of the options above)
-docker run -d --rm -p 6379:6379 redis:7-alpine
-
-# 2. Start backend + worker + frontend
-./start.sh
-
-# Or start frontend separately:
-cd frontend && npm run dev
-```
-
-### Docker Compose (full stack)
+### Option A — Docker Compose (recommended)
 
 ```bash
 docker compose up --build -d
 ```
 
 Then open http://localhost:3000
+
+### Option B — Local Development (`./start.sh`)
+
+#### Prerequisites
+
+- Python 3.12+
+- Node.js 20+
+- Redis 7+ (auto-started via Docker or native if `./start.sh` detects none running)
+
+#### Run
+
+```bash
+./start.sh
+```
+
+`./start.sh` handles everything:
+- Creates a Python virtual environment and installs dependencies
+- Installs Playwright Chromium
+- Starts Redis (via Docker or native `redis-server` if available)
+- Starts the ARQ background worker
+- Starts the Next.js frontend dev server (port 3000)
+- Starts the FastAPI server (port 5000)
+
+Press `Ctrl+C` to stop all services at once.
+
+> **Note:** The first startup is slower (venv creation, dependency installs, Next.js compilation). Subsequent runs are faster.
 
 ## API
 

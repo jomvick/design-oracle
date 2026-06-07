@@ -29,3 +29,4 @@ Thumbs.db
 
 # Docker
 .dockerignore
+dump.rdb

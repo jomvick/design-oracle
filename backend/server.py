@@ -462,4 +462,5 @@ async def api_designs(db: AsyncSession = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.server:app", host="0.0.0.0", port=5000, reload=True)
+    reload = os.getenv("UVICORN_RELOAD", "1") == "1"
+    uvicorn.run("backend.server:app", host="0.0.0.0", port=5000, reload=reload)
