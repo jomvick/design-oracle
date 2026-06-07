@@ -1,6 +1,12 @@
 {
   "name": "design-oracle",
   "version": "0.1.0",
+  "description": "Extract design systems from any website",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jomvick/design-oracle.git"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev",

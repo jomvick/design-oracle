@@ -1,24 +1,35 @@
 @import "tailwindcss";
 
+/* Animations Zen-Tech — shimmer & halo IA */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0B0D12;
-  --surface:#11151C;
-  --card:#171B24;
-  --border:#252A35;
-  --text:#F3F4F6;
-  --muted:#9CA3AF;
-  --muted2:#6B7280;
-  --accent:#D97757;
-  --accent-glow:rgba(217,119,87,.12);
-  --accent-dim:rgba(217,119,87,.06);
-  --green:#3FB950;
-  --green-bg:rgba(63,185,80,.1);
-  --blue:#58A6FF;
-  --blue-bg:rgba(88,166,255,.1);
-  --yellow:#D29922;
-  --yellow-bg:rgba(210,153,34,.1);
-  --red:#F85149;
+  /* Palette organique — jamais de #000 pur */
+  --bg:#0B0F19;
+  --surface:#0D1117;
+  --card:#12161F;
+  --border:rgba(255,255,255,0.06);
+  --text:#F4F4F5;
+  --muted:#A1A1AA;
+  --muted2:#71717A;
+  /* Accent violet — réservé aux éléments IA */
+  --accent:#8B5CF6;
+  --accent-glow:rgba(139,92,246,.18);
+  --accent-dim:rgba(139,92,246,.08);
+  --green:#34D399;
+  --green-bg:rgba(52,211,153,.1);
+  --blue:#60A5FA;
+  --blue-bg:rgba(96,165,250,.1);
+  --yellow:#FBBF24;
+  --yellow-bg:rgba(251,191,36,.1);
+  --red:#F87171;
   --radius:12px;
   --radius-sm:8px;
   --radius-lg:16px;
@@ -37,11 +48,24 @@ body::before {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
   background-size: 80px 80px;
   background-position: center top;
   pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(60px);
 }
 a{color:var(--accent);text-decoration:none}
 

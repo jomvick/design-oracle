@@ -10,11 +10,14 @@ node_modules/
 .next/
 next-env.d.ts
 
-# Project data
+# Project data (keep directory via .gitkeep)
 analyses/*/
+!analyses/.gitkeep
 analyses/analyses.db
 analyses/analyses.db-shm
 analyses/analyses.db-wal
+clones/*/
+!clones/.gitkeep
 
 # OS
 .DS_Store
@@ -27,6 +30,5 @@ Thumbs.db
 # Logs
 *.log
 
-# Docker
-.dockerignore
+# Redis
 dump.rdb

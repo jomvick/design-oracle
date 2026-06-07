@@ -1,0 +1,10 @@
+frontend/node_modules
+frontend/.next
+.git
+.gitignore
+*.md
+__pycache__
+*.pyc
+.venv
+venv
+.env

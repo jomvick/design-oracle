@@ -1,4 +1,4 @@
-export const API_BASE = "";
+import type { AnalysisResult, DesignSummary } from "./types";
 
 export interface AnalysisStatus {
   analyze_id: string;
@@ -10,23 +10,15 @@ export interface AnalysisStatus {
   error?: string | null;
   done: boolean;
   title?: string;
+  dna?: AnalysisResult["dna"];
+  colors?: AnalysisResult["colors"];
+  typography?: AnalysisResult["typography"];
+  components?: AnalysisResult["components"];
+  patterns?: AnalysisResult["patterns"];
+  layout?: AnalysisResult["layout"];
 }
 
-export interface AnalysisResult {
-  url: string;
-  final_url: string;
-  title: string;
-  dna?: Record<string, any>;
-  colors?: Record<string, any>;
-  typography?: Record<string, any>;
-  components?: Record<string, any>[];
-  layout?: Record<string, any>;
-  spacing?: Record<string, any>;
-  radius?: Record<string, any>;
-  patterns?: Record<string, any>[];
-  design_tokens?: Record<string, any>;
-  [key: string]: any;
-}
+export type { AnalysisResult, DesignSummary };
 
 export async function startAnalysis(url: string): Promise<{ analyze_id: string }> {
   const res = await fetch("/api/analyze", {
@@ -36,7 +28,7 @@ export async function startAnalysis(url: string): Promise<{ analyze_id: string }
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || "Analysis failed");
+    throw new Error((err as { detail?: string; error?: string }).detail || (err as { error?: string }).error || "Analysis failed");
   }
   return res.json();
 }
@@ -57,7 +49,7 @@ export async function deleteAnalysis(id: string): Promise<void> {
   await fetch(`/api/analyze/${id}`, { method: "DELETE" });
 }
 
-export async function getDesigns(): Promise<{ id: string; title: string; url: string; style?: string; visual_score?: string }[]> {
+export async function getDesigns(): Promise<DesignSummary[]> {
   const res = await fetch("/api/designs");
   if (!res.ok) return [];
   return res.json();
@@ -71,7 +63,7 @@ export function streamAnalysisEvents(
 ): () => void {
   const es = new EventSource(`/api/analyze/${id}/events`);
   es.addEventListener("progress", (e) => {
-    const d = JSON.parse(e.data);
+    const d = JSON.parse((e as MessageEvent).data);
     onProgress(d);
   });
   es.addEventListener("complete", () => {
@@ -80,7 +72,12 @@ export function streamAnalysisEvents(
   });
   es.addEventListener("error", (e) => {
     let msg = "Connection error";
-    try { const d = JSON.parse((e as MessageEvent).data); msg = d.error || msg; } catch { }
+    try {
+      const d = JSON.parse((e as MessageEvent).data);
+      msg = d.error || msg;
+    } catch {
+      /* non-JSON error event */
+    }
     es.close();
     onError(msg);
   });

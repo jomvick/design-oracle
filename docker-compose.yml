@@ -17,8 +17,15 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - UVICORN_RELOAD=0
     depends_on:
       - redis
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   worker:

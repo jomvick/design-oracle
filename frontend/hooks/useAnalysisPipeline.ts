@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { startAnalysis, streamAnalysisEvents, getAnalysisResult } from "@/lib/api";
+import type { AnalysisResult } from "@/lib/types";
 
 export const PIPELINE_STEPS = [
   "launch", "navigate", "screenshot", "dom", "colors",
@@ -21,7 +22,7 @@ export function useAnalysisPipeline() {
   const [pipelineDetail, setPipelineDetail] = useState("");
   const [logs, setLogs] = useState<PipelineLog[]>([]);
   const [status, setStatus] = useState<"idle" | "running" | "complete" | "error">("idle");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
   const startTime = useRef(0);
   const disconnectRef = useRef<(() => void) | null>(null);
 
@@ -74,8 +75,9 @@ export function useAnalysisPipeline() {
           }
         );
         disconnectRef.current = disconnect;
-      } catch (e: any) {
-        addLog(`Error: ${e.message}`, "error");
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        addLog(`Error: ${msg}`, "error");
         setStatus("error");
       }
     },

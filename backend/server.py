@@ -126,6 +126,10 @@ app = FastAPI(lifespan=lifespan)
 
 # --- API Routes ---
 
+@app.get("/api/health")
+async def api_health():
+    return {"status": "ok", "service": "design-oracle-api"}
+
 @app.post("/api/clone")
 async def api_clone(payload: ClonePayload):
     url = payload.url.strip()

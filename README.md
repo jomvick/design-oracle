@@ -1,6 +1,20 @@
 # Design Oracle
 
-Analyze any website and extract its complete design system — colors, typography, spacing, components, UX patterns — then export it as Tailwind config, React components, design tokens, or a full DESIGN.md report.
+[![CI](https://github.com/jomvick/design-oracle/actions/workflows/ci.yml/badge.svg)](https://github.com/jomvick/design-oracle/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](LICENSE)
+
+Analyze any website and extract its complete design system — colors, typography, spacing, components, UX patterns — then export it as Tailwind config, React components, design tokens, or a full `DESIGN.md` report.
+
+Works standalone or as an [MCP server](AGENT_PROMPT.md) for AI agents (Cursor, Claude Code, opencode, etc.).
+
+## Features
+
+- **Full-page capture** with Playwright (Chromium)
+- **Design DNA** — style classification, visual score, heuristics
+- **Component detection** — hero, pricing, nav, FAQ, etc. with bounding boxes
+- **Live progress** — SSE stream + Redis pub/sub
+- **Exports** — Tailwind v4, React JSX, JSON tokens, Markdown report
+- **MCP integration** — expose analysis tools to AI workflows
 
 ## Architecture
 
@@ -17,100 +31,118 @@ Analyze any website and extract its complete design system — colors, typograph
                      └─────────────┘     └───────────┘
 ```
 
-- **Frontend** — Next.js 15 (App Router) + Tailwind v4 + Framer Motion
-- **Backend** — FastAPI with async SQLAlchemy + aiosqlite
-- **Worker** — ARQ (Redis-backed async job queue)
-- **Analysis** — Playwright for screenshots, custom CSS/HTML parser for design extraction
+| Layer | Stack |
+|-------|-------|
+| Frontend | Next.js 15, React 19, Tailwind v4, Framer Motion |
+| Backend | FastAPI, SQLAlchemy (async), aiosqlite |
+| Worker | ARQ + Redis |
+| Analysis | Playwright, BeautifulSoup, TinyCSS2, Pillow |
 
 ## Quick Start
-
-Choose one of the two methods below.
 
 ### Option A — Docker Compose (recommended)
 
 ```bash
+cp .env.example .env   # optional — defaults work in Docker
 docker compose up --build -d
 ```
 
-Then open http://localhost:3000
+Open **http://localhost:3000**
 
-### Option B — Local Development (`./start.sh`)
+### Option B — Local (`./start.sh`)
 
-#### Prerequisites
-
-- Python 3.12+
-- Node.js 20+
-- Redis 7+ (auto-started via Docker or native if `./start.sh` detects none running)
-
-#### Run
+**Prerequisites:** Python 3.12+, Node.js 20+, Redis 7+
 
 ```bash
+cp .env.example .env
 ./start.sh
 ```
 
-`./start.sh` handles everything:
-- Creates a Python virtual environment and installs dependencies
-- Installs Playwright Chromium
-- Starts Redis (via Docker or native `redis-server` if available)
-- Starts the ARQ background worker
-- Starts the Next.js frontend dev server (port 3000)
-- Starts the FastAPI server (port 5000)
+`start.sh` creates the venv, installs Playwright Chromium, starts Redis (Docker or native), the ARQ worker, Next.js (3000), and FastAPI (5000). Press `Ctrl+C` to stop all services.
 
-Press `Ctrl+C` to stop all services at once.
+> First run is slower (deps + Next.js compile). Subsequent runs are faster.
 
-> **Note:** The first startup is slower (venv creation, dependency installs, Next.js compilation). Subsequent runs are faster.
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_HOST` | `localhost` | Redis hostname |
+| `REDIS_PORT` | `6379` | Redis port |
+| `API_URL` | `http://api:5000` | Backend URL for Next.js proxy |
+| `DESIGN_ORACLE_URL` | `http://localhost:5000` | API URL for MCP server |
+| `UVICORN_RELOAD` | `1` | Hot-reload (set `0` in production) |
+
+See [`.env.example`](.env.example) for the full list.
 
 ## API
 
 | Endpoint | Description |
-|---|---|
+|----------|-------------|
+| `GET /api/health` | Health check |
 | `POST /api/analyze` | Submit a URL for analysis |
-| `GET /api/analyze/{id}` | Get analysis results |
-| `GET /api/analyze/{id}/events` | SSE stream of analysis progress |
+| `GET /api/analyze/{id}/status` | Progress + summary when complete |
+| `GET /api/analyze/{id}/result` | Full JSON result |
+| `GET /api/analyze/{id}/events` | SSE progress stream |
 | `GET /api/analyze/{id}/screenshot` | Full-page screenshot |
+| `DELETE /api/analyze/{id}` | Delete analysis |
+| `GET /api/designs` | List all analyses |
 | `GET /api/analyze/{id}/export/tailwind` | Tailwind v4 config |
 | `GET /api/analyze/{id}/export/components` | React components |
 | `GET /api/analyze/{id}/export/design.md` | Design report |
 | `GET /api/analyze/{id}/export/tokens` | Design tokens (JSON) |
-| `GET /api/designs` | List all analyses |
 
-## Generated Outputs
+## Generated outputs
 
-Each analysis produces:
+Each analysis writes to `analyses/{id}/`:
 
-- **screenshot.png** — Full-page capture
-- **screenshot-overlay.png** — With detected component bounding boxes
-- **result.json** — Complete raw analysis data
-- **DESIGN.md** — Human-readable design system report
-- **tailwind.config.js** — Tailwind v4 theme config
-- **components.jsx** — Extracted UI components as React code
-- **design-tokens.json** — Structured design tokens
+| File | Description |
+|------|-------------|
+| `screenshot.png` | Full-page capture |
+| `screenshot-overlay.png` | Component bounding boxes |
+| `result.json` | Raw analysis data |
+| `DESIGN.md` | Human-readable report |
+| `tailwind.config.js` | Tailwind v4 theme |
+| `components.jsx` | React component stubs |
+| `design-tokens.json` | Structured tokens |
 
 ## MCP Server
 
-Design Oracle includes an MCP server for AI agent integration:
-
 ```bash
 source .venv/bin/activate
+pip install -r backend/requirements.txt
 python3 backend/mcp_server.py
 ```
 
-Then configure in your AI tool:
+Configure in your AI tool — see [`opencode.json.example`](opencode.json.example) or [`AGENT_PROMPT.md`](AGENT_PROMPT.md).
 
-```json
-{
-  "mcpServers": {
-    "design-oracle": {
-      "command": "python3",
-      "args": ["backend/mcp_server.py"]
-    }
-  }
-}
+## Project structure
+
+```
+design-oracle/
+├── backend/
+│   ├── server.py          # FastAPI routes
+│   ├── worker.py          # ARQ background jobs
+│   ├── mcp_server.py      # MCP tools for AI agents
+│   ├── analyzer/          # Playwright extraction pipeline
+│   └── generators/        # Tailwind, React, Markdown exports
+├── frontend/              # Next.js App Router UI
+├── analyses/              # Runtime data (gitignored except .gitkeep)
+├── docker-compose.yml
+├── start.sh
+└── .env.example
 ```
 
-## Tech Stack
+## Contributing
 
-- **Frontend**: Next.js 15, React 19, Tailwind v4, Framer Motion, Lucide React
-- **Backend**: FastAPI, SQLAlchemy (async), aiosqlite, ARQ, Redis
-- **Analysis**: Playwright, BeautifulSoup, TinyCSS2, Pillow
-- **Infra**: Docker Compose
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE) © [jomvick](https://github.com/jomvick)
+
+## Known limitations
+
+- Single viewport (1440×900) — multi-device analysis not yet implemented
+- Sites with bot protection (Cloudflare, etc.) may block Playwright
+- Component detection uses heuristics, not ML/vision models
+- SQLite storage — suitable for local/single-user; not multi-tenant ready
