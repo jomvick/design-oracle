@@ -19,7 +19,7 @@ echo "Installing Playwright Chromium..."
 python3 -m playwright install chromium 2>/dev/null || true
 
 # --- Redis ---
-if nc -z localhost 6379 2>/dev/null; then
+if command -v redis-cli >/dev/null 2>&1 && redis-cli ping 2>/dev/null | grep -q PONG; then
   echo "Redis connection verified on port 6379."
 elif command -v redis-server >/dev/null 2>&1; then
   echo "Starting local redis-server..."
@@ -34,13 +34,25 @@ else
   exit 1
 fi
 
-# --- Port checks ---
-if ss -tlnp | grep -q ':5000 '; then
+# --- Port checks (Linux / macOS) ---
+port_in_use() {
+  local port=$1
+  if command -v ss >/dev/null 2>&1; then
+    ss -tlnp 2>/dev/null | grep -q ":$port "
+  elif command -v lsof >/dev/null 2>&1; then
+    lsof -iTCP:"$port" -sTCP:LISTEN -P -n 2>/dev/null | grep -q .
+  fi
+}
+if port_in_use 5000; then
   echo "ERROR: Port 5000 already in use. Kill the process and retry:"
-  echo "  fuser -k 5000/tcp"
+  if command -v lsof >/dev/null 2>&1; then
+    echo "  lsof -ti :5000 | xargs kill"
+  else
+    echo "  fuser -k 5000/tcp"
+  fi
   exit 1
 fi
-if ss -tlnp | grep -q ':3000 '; then
+if port_in_use 3000; then
   echo "WARNING: Port 3000 already in use — frontend may fail."
 fi
 
