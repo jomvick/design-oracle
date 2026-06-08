@@ -41,7 +41,8 @@ export default function Topbar() {
         </div>
       </Link>
 
-      {!isHome && (
+      {/* Navigation contextuelle déplacée dans AnalysisToolbar sur /analysis */}
+      {!isHome && !pathname.startsWith("/analysis") && (
         <Link
           href="/"
           className={cn(

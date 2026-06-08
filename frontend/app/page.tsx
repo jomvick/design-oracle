@@ -22,7 +22,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex min-h-[calc(100vh-60px)] flex-col items-center">
+    <main className="home-shell">
       <HeroInput onAnalyze={handleAnalyze} loading={loading} />
       <HistoryList
         designs={designs}

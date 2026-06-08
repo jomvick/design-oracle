@@ -52,28 +52,28 @@ function AnalysisContent() {
   }, [status, currentId, router]);
 
   return (
-    <div className="flex h-[calc(100vh-60px)] overflow-hidden">
-      <aside className="hidden w-[240px] shrink-0 lg:block">
-        <Pipeline
-          currentStage={pipelineStage}
-          progress={pipelineProgress}
-          detail={pipelineDetail}
+    <div className="flex h-[calc(100vh-60px)] flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1">
+        <aside className="hidden lg:flex">
+          <Pipeline
+            currentStage={pipelineStage}
+            progress={pipelineProgress}
+          />
+        </aside>
+
+        <AnalysisStage
+          status={status}
+          pipelineDetail={pipelineDetail}
+          screenshotUrl={screenshotUrl}
+          currentId={currentId}
+          device={device}
+          onDeviceChange={setDevice}
         />
-      </aside>
 
-      <AnalysisStage
-        url={url}
-        status={status}
-        pipelineDetail={pipelineDetail}
-        screenshotUrl={screenshotUrl}
-        currentId={currentId}
-        device={device}
-        onDeviceChange={setDevice}
-      />
-
-      <aside className="hidden w-[300px] shrink-0 xl:block">
-        <Logs logs={logs} status={status} />
-      </aside>
+        <aside className="hidden xl:flex">
+          <Logs logs={logs} status={status} />
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,16 @@
 # Design Oracle
 
 [![CI](https://github.com/jomvick/design-oracle/actions/workflows/ci.yml/badge.svg)](https://github.com/jomvick/design-oracle/actions/workflows/ci.yml)
+[![Docker](https://img.shields.io/badge/Docker-ghcr.io%2Fjomvick%2Fdesign--oracle-2496ED?logo=docker)](https://github.com/jomvick/design-oracle/pkgs/container/design-oracle)
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](LICENSE)
 
 Analyze any website and extract its complete design system — colors, typography, spacing, components, UX patterns — then export it as Tailwind config, React components, design tokens, or a full `DESIGN.md` report.
 
 Works standalone or as an [MCP server](AGENT_PROMPT.md) for AI agents (Cursor, Claude Code, opencode, etc.).
+
+<p align="center">
+  <img src="Gif/export-1780924448919.gif" alt="Design Oracle demo" width="720">
+</p>
 
 ## Features
 

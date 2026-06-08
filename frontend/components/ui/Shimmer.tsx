@@ -1,12 +1,11 @@
 import { cn } from "@/lib/cn";
+import { Loader2 } from "lucide-react";
 
 interface ShimmerProps {
   className?: string;
-  /** Nombre de lignes skeleton pour un bloc texte */
   lines?: number;
 }
 
-/** Skeleton avec balayage lumineux — chargement fluide, pas de texte brut */
 export function ShimmerBlock({ className }: { className?: string }) {
   return (
     <div
@@ -32,14 +31,22 @@ export function ShimmerText({ lines = 3, className }: ShimmerProps) {
   );
 }
 
-/** Preview screenshot en cours de capture */
-export function ShimmerScreenshot({ className }: { className?: string }) {
+/** Carte de chargement unique — statut intégré, pas de texte flottant en dessous */
+export function ShimmerScreenshot({
+  className,
+  status = "Extracting design…",
+}: {
+  className?: string;
+  status?: string;
+}) {
   return (
-    <div className={cn("relative w-full max-w-3xl", className)}>
-      <ShimmerBlock className="aspect-[4/3] w-full rounded-2xl" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-        <div className="h-10 w-10 rounded-full border border-violet-500/30 border-t-violet-400 animate-spin" />
-        <p className="text-sm font-medium text-zinc-500">Extracting design…</p>
+    <div className={cn("relative w-full", className)}>
+      <ShimmerBlock className="aspect-[16/10] w-full rounded-2xl" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6">
+        <Loader2 className="h-8 w-8 animate-spin text-violet-400/80" strokeWidth={1.5} />
+        <p className="max-w-xs text-center text-sm font-medium text-zinc-400">
+          {status}
+        </p>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { PIPELINE_STEPS } from "@/hooks/useAnalysisPipeline";
 import { cn } from "@/lib/cn";
-import GlassPanel from "@/components/ui/GlassPanel";
+import PanelHeader from "@/components/ui/PanelHeader";
 import {
   Rocket,
   Globe,
@@ -21,7 +21,6 @@ import {
 interface PipelineProps {
   currentStage: string;
   progress: number;
-  detail: string;
 }
 
 const STAGE_META: Record<string, { label: string; icon: LucideIcon }> = {
@@ -37,11 +36,7 @@ const STAGE_META: Record<string, { label: string; icon: LucideIcon }> = {
   dna: { label: "Design DNA", icon: Dna },
 };
 
-export default function Pipeline({
-  currentStage,
-  progress,
-  detail,
-}: PipelineProps) {
+export default function Pipeline({ currentStage, progress }: PipelineProps) {
   const isComplete = currentStage === "complete";
   const isError = currentStage === "error";
   const currentIndex =
@@ -51,13 +46,11 @@ export default function Pipeline({
   const isRunning = currentIndex >= 0 && !isComplete && !isError;
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-r border-white/[0.06] bg-[#0D1117]/50">
-      <div className="flex-1 overflow-y-auto p-5">
-        <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-600">
-          AI Pipeline
-        </p>
+    <div className="flex h-full min-h-0 w-[220px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0D1117]/40">
+      <PanelHeader title="Pipeline" />
 
-        <div className="flex flex-col gap-1">
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="flex flex-col gap-0.5">
           {PIPELINE_STEPS.map((step, i) => {
             const meta = STAGE_META[step] ?? { label: step, icon: Dna };
             const Icon = meta.icon;
@@ -69,60 +62,55 @@ export default function Pipeline({
               <div
                 key={step}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-300",
-                  isActive && "bg-violet-500/[0.08] text-zinc-100",
-                  isDone && !isActive && "text-emerald-400/90",
-                  !isActive && !isDone && !isStepError && "text-zinc-600",
-                  isStepError && "bg-red-500/[0.06] text-red-400"
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200",
+                  isActive && "bg-violet-500/[0.08]",
+                  isStepError && "bg-red-500/[0.06]"
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all",
-                    isActive &&
-                      "bg-violet-500/15 text-violet-400 shadow-[0_0_16px_-4px_rgba(139,92,246,0.5)]",
-                    isDone && !isActive && "bg-emerald-500/10 text-emerald-400",
-                    !isActive && !isDone && "bg-white/[0.03] text-zinc-600",
-                    isStepError && "bg-red-500/10 text-red-400"
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
+                    isActive && "bg-violet-500/15 text-violet-400",
+                    isDone && !isActive && "text-emerald-500/80",
+                    !isActive && !isDone && !isStepError && "text-zinc-600",
+                    isStepError && "text-red-400"
                   )}
                 >
                   {isDone && !isActive ? (
-                    <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                    <Check className="h-3 w-3" strokeWidth={2.5} />
                   ) : (
-                    <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    <Icon className="h-3 w-3" strokeWidth={1.75} />
                   )}
                 </span>
-                <span className="text-xs font-medium">{meta.label}</span>
-                {isActive && (
-                  <span className="ml-auto h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
-                )}
+                <span
+                  className={cn(
+                    "text-[11px] font-medium",
+                    isActive && "text-zinc-100",
+                    isDone && !isActive && "text-zinc-500",
+                    !isActive && !isDone && !isStepError && "text-zinc-600",
+                    isStepError && "text-red-400"
+                  )}
+                >
+                  {meta.label}
+                </span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Barre de progression — dégradé violet = activité IA */}
-      <div className="border-t border-white/[0.06] p-5">
-        <GlassPanel className="p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
-              Progress
-            </span>
-            <span className="font-mono text-[11px] font-medium text-violet-400">
-              {progress}%
-            </span>
-          </div>
-          <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-400 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(139,92,246,0.5)]"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-3 line-clamp-2 font-mono text-[10px] leading-relaxed text-zinc-500">
-            {detail || "Waiting…"}
-          </p>
-        </GlassPanel>
+      {/* Progress mobile — visible quand la toolbar cache la barre */}
+      <div className="border-t border-white/[0.06] p-3 md:hidden">
+        <div className="mb-1 flex justify-between font-mono text-[10px] text-zinc-600">
+          <span>Progress</span>
+          <span className="text-violet-400">{progress}%</span>
+        </div>
+        <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
     </div>
   );
