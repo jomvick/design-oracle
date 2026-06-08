@@ -18,6 +18,13 @@ import {
   Download,
   Copy,
   Check,
+  FileBadge2,
+  FileJson,
+  Settings2,
+  Component,
+  ImageDown,
+  ScanSearch,
+  DatabaseZap,
 } from "lucide-react";
 
 function DashboardContent() {
@@ -116,6 +123,65 @@ function DashboardContent() {
     { id: "tailwind", label: "Tailwind v4", icon: <Wind size={14} />, url: `/api/analyze/${id}/export/tailwind`, ext: ".js" },
     { id: "tokens", label: "Tokens", icon: <Sun size={14} />, url: `/api/analyze/${id}/export/tokens`, ext: ".json" },
     { id: "components", label: "Components", icon: <Box size={14} />, url: `/api/analyze/${id}/export/components`, ext: ".jsx" },
+  ];
+
+  const exports = [
+    {
+      label: "DESIGN.md",
+      sub: "Full report",
+      icon: <FileBadge2 size={18} />,
+      tone: "report",
+      url: `/api/analyze/${id}/export/design.md`,
+      download: true,
+    },
+    {
+      label: "tailwind.config.js",
+      sub: "Theme config",
+      icon: <Settings2 size={18} />,
+      tone: "config",
+      url: `/api/analyze/${id}/export/tailwind`,
+      download: true,
+    },
+    {
+      label: "components.jsx",
+      sub: "React components",
+      icon: <Component size={18} />,
+      tone: "component",
+      url: `/api/analyze/${id}/export/components`,
+      download: true,
+    },
+    {
+      label: "screenshot.png",
+      sub: "Full page",
+      icon: <ImageDown size={18} />,
+      tone: "image",
+      url: `/api/analyze/${id}/screenshot`,
+      download: true,
+    },
+    {
+      label: "overlay.png",
+      sub: "Component boxes",
+      icon: <ScanSearch size={18} />,
+      tone: "overlay",
+      url: `/api/analyze/${id}/screenshot/overlay`,
+      download: true,
+    },
+    {
+      label: "design-tokens.json",
+      sub: "Design tokens",
+      icon: <FileJson size={18} />,
+      tone: "tokens",
+      url: `/api/analyze/${id}/export/tokens`,
+      download: true,
+    },
+    {
+      label: "result.json",
+      sub: "Raw analysis data",
+      icon: <DatabaseZap size={18} />,
+      tone: "data",
+      url: `/api/analyze/${id}/result`,
+      download: false,
+    },
   ];
 
   const tabs = [
@@ -346,17 +412,6 @@ function DashboardContent() {
         {/* ─── DESIGN SYSTEM ─── */}
         {activeTab === "design-system" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-              <a
-                className="zen-btn-small"
-                href={`/design-system?id=${id}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: 11 }}
-              >
-                Open Dedicated Page ↗
-              </a>
-            </div>
             <div className="ds-container">
               <div className="ds-sidebar">
                 {[
@@ -912,22 +967,10 @@ function DashboardContent() {
             <div className="export-section">
               <h3>Downloads</h3>
               <div className="export-grid">
-                {[
-                  { label: "DESIGN.md", sub: "Full report", icon: "md", url: `/api/analyze/${id}/export/design.md`, cls: "" },
-                  { label: "tailwind.config.js", sub: "Theme config", icon: "tailwind", url: `/api/analyze/${id}/export/tailwind`, cls: "" },
-                  { label: "components.jsx", sub: "React components", icon: "react", url: `/api/analyze/${id}/export/components`, cls: "" },
-                  { label: "screenshot.png", sub: "Full page", icon: "img", url: `/api/analyze/${id}/screenshot`, cls: "" },
-                  { label: "overlay.png", sub: "With component boxes", icon: "img", url: `/api/analyze/${id}/screenshot/overlay`, cls: "" },
-                  { label: "design-tokens.json", sub: "Design tokens", icon: "json", url: `/api/analyze/${id}/export/tokens`, cls: "" },
-                  { label: "result.json", sub: "Raw data", icon: "json", url: `/api/analyze/${id}/result`, cls: "" },
-                ].map((item, i) => (
-                  <a key={i} className="export-card" href={item.url} download={!item.url.endsWith("/result")}>
-                    <span className={`icon ${item.icon}`}>
-                      {item.icon === "md" ? <FileText size={16} /> :
-                       item.icon === "tailwind" ? <Wind size={16} /> :
-                       item.icon === "react" ? <Box size={16} /> :
-                       item.icon === "img" ? <Eye size={16} /> :
-                       <Sun size={16} />}
+                {exports.map((item) => (
+                  <a key={item.label} className="export-card" href={item.url} download={item.download}>
+                    <span className={`icon ${item.tone}`}>
+                      {item.icon}
                     </span>
                     <div>
                       <div className="label">{item.label}</div>

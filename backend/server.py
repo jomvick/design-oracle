@@ -1,5 +1,4 @@
 import asyncio
-import io
 import json
 import logging
 import os
@@ -8,33 +7,25 @@ import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, HTTPException, Depends, status
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as aioredis
 from arq import create_pool
 from arq.connections import RedisSettings
 
-from backend.cloner import clone
 from backend.database import init_db, AsyncSessionLocal, AnalysisModel
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE = Path(__file__).resolve().parent.parent
-CLONES_DIR = BASE / "clones"
-FRONTEND_DIR = BASE / "frontend"  # kept for reference, no longer serves pages
 ANALYSES_DIR = BASE / "analyses"
 ANALYSES_DIR.mkdir(exist_ok=True)
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-
-def get_clone_dir(clone_id: str):
-    d = CLONES_DIR / clone_id
-    d.mkdir(parents=True, exist_ok=True)
-    return d
 
 def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
@@ -42,9 +33,6 @@ def get_analysis_dir(analyze_id: str):
     return d
 
 # --- Pydantic Schemas ---
-class ClonePayload(BaseModel):
-    url: str
-
 class AnalyzePayload(BaseModel):
     url: str
 
@@ -129,110 +117,6 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/api/health")
 async def api_health():
     return {"status": "ok", "service": "design-oracle-api"}
-
-@app.post("/api/clone")
-async def api_clone(payload: ClonePayload):
-    url = payload.url.strip()
-    if not url:
-        raise HTTPException(status_code=400, detail="URL manquante")
-    clone_id = str(uuid.uuid4())[:8]
-    out_dir = get_clone_dir(clone_id)
-    
-    # Run sync cloning in threadpool
-    result = await asyncio.to_thread(clone, url, str(out_dir))
-    if "error" in result:
-        shutil.rmtree(out_dir, ignore_errors=True)
-        return JSONResponse(status_code=400, content=result)
-    result["clone_id"] = clone_id
-    return result
-
-@app.get("/clones/{clone_id}/{subpath:path}")
-async def serve_clone_file(clone_id: str, subpath: str):
-    d = CLONES_DIR / clone_id
-    if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone not found")
-    target_path = (d / subpath).resolve()
-    # Security check to prevent directory traversal
-    if not str(target_path).startswith(str(d.resolve())):
-        raise HTTPException(status_code=403, detail="Access denied")
-    if not target_path.exists() or not target_path.is_file():
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(str(target_path))
-
-@app.get("/clones/{clone_id}/raw/{subpath:path}")
-async def serve_raw_file(clone_id: str, subpath: str):
-    d = CLONES_DIR / clone_id
-    if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone not found")
-    target_path = (d / subpath).resolve()
-    # Security check to prevent directory traversal
-    if not str(target_path).startswith(str(d.resolve())):
-        raise HTTPException(status_code=403, detail="Access denied")
-    if not target_path.exists() or not target_path.is_file():
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(str(target_path), media_type="text/plain")
-
-@app.get("/api/raw/{clone_id}")
-async def api_raw(clone_id: str):
-    d = CLONES_DIR / clone_id
-    if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone not found")
-    index_file = d / "index.html"
-    if not index_file.exists():
-        raise HTTPException(status_code=404, detail="index.html not found")
-    return FileResponse(str(index_file), media_type="text/html")
-
-@app.get("/api/list")
-async def api_list():
-    clones = []
-    if CLONES_DIR.exists():
-        def get_clones():
-            res = []
-            for d in sorted(CLONES_DIR.iterdir()):
-                if d.is_dir() and (d / "index.html").exists():
-                    res.append({"id": d.name, "files": len(list(d.rglob("*")))})
-            return res
-        clones = await asyncio.to_thread(get_clones)
-    return clones
-
-@app.post("/api/save/{clone_id}")
-async def api_save(clone_id: str, request: Request):
-    d = CLONES_DIR / clone_id
-    if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone not found")
-    
-    # Read raw body text
-    body_bytes = await request.body()
-    data = body_bytes.decode("utf-8")
-    
-    await asyncio.to_thread((d / "index.html").write_text, data, encoding="utf-8")
-    return {"ok": True}
-
-@app.get("/api/export/{clone_id}")
-async def api_export(clone_id: str):
-    d = CLONES_DIR / clone_id
-    if not d.exists():
-        raise HTTPException(status_code=404, detail="Clone not found")
-        
-    def create_zip():
-        import zipfile
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            for fp in d.rglob("*"):
-                if fp.is_file():
-                    arcname = str(fp.relative_to(d))
-                    zf.write(str(fp), arcname)
-        buf.seek(0)
-        return buf
-
-    buf = await asyncio.to_thread(create_zip)
-    return StreamingResponse(
-        buf,
-        media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename={clone_id}.zip"}
-    )
-
-# --- New Analysis Pipeline ---
 
 @app.post("/api/analyze")
 async def api_analyze(payload: AnalyzePayload, db: AsyncSession = Depends(get_db)):
