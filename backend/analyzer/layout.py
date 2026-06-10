@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from collections import Counter
 from bs4 import BeautifulSoup
@@ -168,10 +169,28 @@ def overlay_screenshot(screenshot_bytes: bytes, boxes: list[dict]) -> bytes:
         (248, 81, 73, 200),
     ]
 
-    try:
-        font = ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf", 13)
-    except Exception:
-        font = None
+    # Try to find a valid font path
+    font = None
+    possible_fonts = [
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+    ]
+
+    for font_path in possible_fonts:
+        if os.path.exists(font_path):
+            try:
+                font = ImageFont.truetype(font_path, 13)
+                break
+            except Exception:
+                continue
+
+    if not font:
+        try:
+            # Fallback to load_default which always works but is less pretty
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
 
     for i, box in enumerate(boxes):
         ci = i % len(box_colors)

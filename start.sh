@@ -18,6 +18,22 @@ pip install -q -r backend/requirements.txt
 echo "Installing Playwright Chromium..."
 python3 -m playwright install chromium 2>/dev/null || true
 
+# --- Check System Dependencies ---
+echo "Checking system dependencies for Playwright..."
+MISSING_LIBS=()
+LIBS=("libnss3" "libnspr4" "libatk1.0-0" "libatk-bridge2.0-0" "libcups2" "libdrm2" "libdbus-1-3" "libxkbcommon0" "libgbm1")
+
+for lib in "${LIBS[@]}"; do
+  if ! ldconfig -p | grep -q "$lib"; then
+    MISSING_LIBS+=("$lib")
+  fi
+done
+
+if [ ${#MISSING_LIBS[@]} -gt 0 ]; then
+  echo "WARNING: Missing some system libraries required for Playwright: ${MISSING_LIBS[*]}"
+  echo "You may need to install them with: sudo apt-get install -y ${MISSING_LIBS[*]}"
+fi
+
 # --- Redis ---
 if command -v redis-cli >/dev/null 2>&1 && redis-cli ping 2>/dev/null | grep -q PONG; then
   echo "Redis connection verified on port 6379."
