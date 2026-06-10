@@ -18,6 +18,38 @@ pip install -q -r backend/requirements.txt
 echo "Installing Playwright Chromium..."
 python3 -m playwright install chromium 2>/dev/null || true
 
+# --- Check System Dependencies ---
+echo "Checking system dependencies for Playwright..."
+OS=$(uname -s)
+if [ "$OS" = "Linux" ] && command -v ldconfig >/dev/null 2>&1; then
+  MISSING_LIBS=()
+  # Playwright Chromium dependencies (sonames)
+  LIBS=(
+    "libatk-1.0.so.0" "libcairo.so.2" "libxcomposite.so.1" "libxdamage.so.1"
+    "libxfixes.so.3" "libxrandr.so.2" "libpango-1.0.so.0" "libasound.so.2"
+    "libatspi.so.0" "libwayland-client.so.0" "libwayland-egl.so.1" "libgbm.so.1"
+    "libdrm.so.2" "libdbus-1.so.3" "libxkbcommon.so.0" "libnss3.so" "libnspr4.so"
+  )
+
+  for lib in "${LIBS[@]}"; do
+    if ! ldconfig -p | grep -q "$lib"; then
+      MISSING_LIBS+=("$lib")
+    fi
+  done
+
+  if [ ${#MISSING_LIBS[@]} -gt 0 ]; then
+    echo "WARNING: Missing some system libraries required for Playwright: ${MISSING_LIBS[*]}"
+    if command -v apt-get >/dev/null 2>&1; then
+      # Map common sonames to debian packages for the hint
+      echo "You may need to install them with: sudo apt-get update && sudo apt-get install -y libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libdbus-1-3 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 libwayland-client0 libwayland-egl1"
+    else
+      echo "Please install the equivalent packages for your Linux distribution."
+    fi
+  fi
+else
+  echo "Skipping system library check (Non-Linux or ldconfig missing)."
+fi
+
 # --- Redis ---
 if command -v redis-cli >/dev/null 2>&1 && redis-cli ping 2>/dev/null | grep -q PONG; then
   echo "Redis connection verified on port 6379."

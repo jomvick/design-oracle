@@ -1,4 +1,5 @@
 import datetime
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, String, Integer, Boolean, JSON, DateTime
@@ -6,6 +7,14 @@ from sqlalchemy import Column, String, Integer, Boolean, JSON, DateTime
 DATABASE_URL = "sqlite+aiosqlite:///./analyses/analyses.db"
 
 engine = create_async_engine(DATABASE_URL, echo=False)
+
+@event.listens_for(engine.sync_engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.execute("PRAGMA busy_timeout=10000")
+    cursor.close()
+
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 
@@ -34,5 +43,5 @@ class AnalysisModel(Base):
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # WAL mode is database-persistent
         await conn.exec_driver_sql("PRAGMA journal_mode=WAL")
-        await conn.exec_driver_sql("PRAGMA busy_timeout=5000")

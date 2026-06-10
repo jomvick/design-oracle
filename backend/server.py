@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -7,7 +8,7 @@ import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -146,6 +147,7 @@ async def api_analyze(payload: AnalyzePayload, db: AsyncSession = Depends(get_db
 
 @app.get("/api/analyze/{analyze_id}/events")
 async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)):
+    validate_analyze_id(analyze_id)
     # Retrieve current/initial state from DB
     db_analysis = await db.get(AnalysisModel, analyze_id)
     if db_analysis is None:
@@ -210,6 +212,7 @@ async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)
 
 @app.get("/api/analyze/{analyze_id}/status")
 async def api_analyze_status(analyze_id: str, db: AsyncSession = Depends(get_db)):
+    validate_analyze_id(analyze_id)
     db_analysis = await db.get(AnalysisModel, analyze_id)
     if db_analysis is None:
         # Check files for backwards compatibility fallback
@@ -241,8 +244,17 @@ async def api_analyze_status(analyze_id: str, db: AsyncSession = Depends(get_db)
         })
     return status_dict
 
+def validate_analyze_id(analyze_id: str):
+    # Current IDs are 8-char alnum from uuid4()[:8]
+    if not analyze_id or len(analyze_id) < 8:
+        raise HTTPException(status_code=400, detail="Invalid analyze ID format")
+    # Allow alphanumeric and hyphens (for potential full UUIDs in future)
+    if not all(c.isalnum() or c == "-" for c in analyze_id):
+        raise HTTPException(status_code=400, detail="Invalid analyze ID format")
+
 @app.get("/api/analyze/{analyze_id}/result")
 async def api_analyze_result(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     result_file = d / "result.json"
     if not result_file.exists():
@@ -252,6 +264,7 @@ async def api_analyze_result(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/screenshot")
 async def api_analyze_screenshot(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     screenshot_file = d / "screenshot.png"
     if not screenshot_file.exists():
@@ -260,6 +273,7 @@ async def api_analyze_screenshot(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/screenshot/overlay")
 async def api_analyze_screenshot_overlay(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     overlay_file = d / "screenshot-overlay.png"
     if not overlay_file.exists():
@@ -268,6 +282,7 @@ async def api_analyze_screenshot_overlay(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/export/tailwind")
 async def api_export_tailwind(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     tw_file = d / "tailwind.config.js"
     if not tw_file.exists():
@@ -280,6 +295,7 @@ async def api_export_tailwind(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/export/components")
 async def api_export_react_components(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     comp_file = d / "components.jsx"
     if not comp_file.exists():
@@ -292,6 +308,7 @@ async def api_export_react_components(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/export/tokens")
 async def api_export_tokens(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     tok_file = d / "design-tokens.json"
     if not tok_file.exists():
@@ -304,6 +321,7 @@ async def api_export_tokens(analyze_id: str):
 
 @app.get("/api/analyze/{analyze_id}/export/design.md")
 async def api_export_design_md(analyze_id: str):
+    validate_analyze_id(analyze_id)
     d = ANALYSES_DIR / analyze_id
     md_file = d / "DESIGN.md"
     if not md_file.exists():
@@ -316,6 +334,7 @@ async def api_export_design_md(analyze_id: str):
 
 @app.delete("/api/analyze/{analyze_id}")
 async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db)):
+    validate_analyze_id(analyze_id)
     from sqlalchemy import select
     stmt = select(AnalysisModel).where(AnalysisModel.id == analyze_id)
     res = await db.execute(stmt)
@@ -328,6 +347,58 @@ async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db
     if d.exists():
         shutil.rmtree(str(d))
     return {"deleted": analyze_id}
+
+async def cleanup_old_analyses(db: AsyncSession, days: int = 7):
+    """Delete analysis directories and DB records older than X days, skipping in-progress ones"""
+    try:
+        from sqlalchemy import select
+        now = datetime.datetime.utcnow()
+        cutoff = now - datetime.timedelta(days=days)
+
+        # Find eligible records
+        stmt = select(AnalysisModel).where(
+            AnalysisModel.created_at < cutoff,
+            AnalysisModel.status.in_(["complete", "error", "pending"]) # pending is fine if it's old
+        )
+        res = await db.execute(stmt)
+        analyses = res.scalars().all()
+
+        count = 0
+        for analysis in analyses:
+            d = ANALYSES_DIR / analysis.id
+            try:
+                if d.exists():
+                    shutil.rmtree(str(d))
+                await db.delete(analysis)
+                count += 1
+            except Exception as e:
+                logger.error(f"Failed to cleanup analysis {analysis.id}: {e}")
+
+        await db.commit()
+        return count
+    except Exception as e:
+        logger.exception(f"Cleanup failed: {e}")
+        raise
+
+@app.post("/api/maintenance/cleanup")
+async def api_maintenance_cleanup(
+    days: int = 7,
+    db: AsyncSession = Depends(get_db),
+    x_maintenance_key: str = Header(None)
+):
+    if days <= 0:
+        raise HTTPException(status_code=400, detail="Days must be an integer > 0")
+
+    expected_key = os.getenv("MAINTENANCE_API_KEY")
+    if not expected_key:
+        logger.warning("MAINTENANCE_API_KEY not set in environment. Cleanup endpoint disabled.")
+        raise HTTPException(status_code=503, detail="Maintenance key not configured")
+
+    if x_maintenance_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid maintenance key")
+
+    count = await cleanup_old_analyses(db, days)
+    return {"deleted_count": count}
 
 @app.get("/api/designs")
 async def api_designs(db: AsyncSession = Depends(get_db)):
