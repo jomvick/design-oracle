@@ -8,7 +8,7 @@ import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -348,30 +348,56 @@ async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db
         shutil.rmtree(str(d))
     return {"deleted": analyze_id}
 
-async def cleanup_old_analyses(days: int = 7):
-    """Delete analysis directories older than X days"""
+async def cleanup_old_analyses(db: AsyncSession, days: int = 7):
+    """Delete analysis directories and DB records older than X days, skipping in-progress ones"""
     try:
-        now = datetime.datetime.now().timestamp()
-        cutoff = now - (days * 86400)
+        from sqlalchemy import select
+        now = datetime.datetime.utcnow()
+        cutoff = now - datetime.timedelta(days=days)
 
-        if not ANALYSES_DIR.exists():
-            return 0
+        # Find eligible records
+        stmt = select(AnalysisModel).where(
+            AnalysisModel.created_at < cutoff,
+            AnalysisModel.status.in_(["complete", "error", "pending"]) # pending is fine if it's old
+        )
+        res = await db.execute(stmt)
+        analyses = res.scalars().all()
 
         count = 0
-        for d in ANALYSES_DIR.iterdir():
-            if d.is_dir() and d.name != ".gitkeep":
-                # Check directory mtime
-                if d.stat().st_mtime < cutoff:
+        for analysis in analyses:
+            d = ANALYSES_DIR / analysis.id
+            try:
+                if d.exists():
                     shutil.rmtree(str(d))
-                    count += 1
+                await db.delete(analysis)
+                count += 1
+            except Exception as e:
+                logger.error(f"Failed to cleanup analysis {analysis.id}: {e}")
+
+        await db.commit()
         return count
     except Exception as e:
-        logger.error(f"Cleanup failed: {e}")
-        return 0
+        logger.exception(f"Cleanup failed: {e}")
+        raise
 
 @app.post("/api/maintenance/cleanup")
-async def api_maintenance_cleanup(days: int = 7):
-    count = await cleanup_old_analyses(days)
+async def api_maintenance_cleanup(
+    days: int = 7,
+    db: AsyncSession = Depends(get_db),
+    x_maintenance_key: str = Header(None)
+):
+    if days <= 0:
+        raise HTTPException(status_code=400, detail="Days must be an integer > 0")
+
+    expected_key = os.getenv("MAINTENANCE_API_KEY")
+    if not expected_key:
+        logger.warning("MAINTENANCE_API_KEY not set in environment. Cleanup endpoint disabled.")
+        raise HTTPException(status_code=503, detail="Maintenance key not configured")
+
+    if x_maintenance_key != expected_key:
+        raise HTTPException(status_code=401, detail="Invalid maintenance key")
+
+    count = await cleanup_old_analyses(db, days)
     return {"deleted_count": count}
 
 @app.get("/api/designs")

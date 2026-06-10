@@ -1,8 +1,11 @@
 import json
+import logging
 import os
 import re
 from collections import Counter
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
 
 async def extract_spacing_scale(page) -> dict:
     js = """() => {
@@ -182,7 +185,8 @@ def overlay_screenshot(screenshot_bytes: bytes, boxes: list[dict]) -> bytes:
             try:
                 font = ImageFont.truetype(font_path, 13)
                 break
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to load font from {font_path}: {e}")
                 continue
 
     if not font:
