@@ -21,7 +21,15 @@ async def run_analysis(url: str, progress_callback=None):
 
     progress("launch", 0, "Launching browser engine...")
     async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True)
+        browser = await pw.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu"
+            ]
+        )
         context = await browser.new_context(
             viewport={"width": 1440, "height": 900},
             user_agent=(
