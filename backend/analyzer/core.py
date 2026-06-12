@@ -1,6 +1,9 @@
 import asyncio
+import logging
 from pathlib import Path
 from .colors import extract_colors
+
+logger = logging.getLogger(__name__)
 from .typography import extract_typography
 from .layout import (extract_spacing_scale, extract_radius_and_shadows, 
                      get_component_boxes, overlay_screenshot, 
@@ -41,8 +44,8 @@ async def run_analysis(url: str, progress_callback=None):
                 await page.goto(url, wait_until=wait_mode, timeout=timeout_ms)
                 nav_success = True
                 break
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Navigation attempt %s failed: %s", label, e)
 
         if not nav_success:
             progress("error", 0, f"Navigation failed for {url} — unreachable or blocked")
@@ -52,8 +55,8 @@ async def run_analysis(url: str, progress_callback=None):
         # Let the page settle (JS frameworks render, lazy-loads trigger)
         try:
             await page.wait_for_load_state("domcontentloaded", timeout=10000)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("wait_for_load_state after navigation failed: %s", e)
         await page.wait_for_timeout(2000)
 
         final_url = page.url

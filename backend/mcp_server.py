@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 from pathlib import Path
 
 import httpx
 from fastmcp import FastMCP
+
+logger = logging.getLogger(__name__)
 
 BASE = Path(__file__).resolve().parent.parent
 ANALYSES_DIR = BASE / "analyses"
@@ -34,8 +37,8 @@ def _list_analyses():
                         "style": data.get("dna", {}).get("style"),
                         "visual_score": data.get("dna", {}).get("visual_score"),
                     })
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Failed to read analysis %s: %s", d.name, e)
     return results
 
 

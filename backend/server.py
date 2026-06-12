@@ -25,8 +25,13 @@ BASE = Path(__file__).resolve().parent.parent
 ANALYSES_DIR = BASE / "analyses"
 ANALYSES_DIR.mkdir(exist_ok=True)
 
+DEFAULT_REDIS_PORT = 6379
+DEFAULT_API_PORT = 5000
+SSE_POLL_INTERVAL = 0.1
+SSE_MAX_POLLS = 3000
+
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_PORT = int(os.getenv("REDIS_PORT", DEFAULT_REDIS_PORT))
 
 def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
@@ -101,6 +106,10 @@ async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as db:
         await migrate_disk_analyses_to_db(db)
         
+    # Validate maintenance key at startup
+    if not os.getenv("MAINTENANCE_API_KEY"):
+        logger.warning("MAINTENANCE_API_KEY not set — /api/maintenance/cleanup will be disabled")
+
     # Connect to Redis
     app.state.redis_pool = await create_pool(RedisSettings(host=REDIS_HOST, port=REDIS_PORT))
     app.state.redis_client = await aioredis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True)
@@ -180,8 +189,9 @@ async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)
         await pubsub.subscribe(f"analysis_events:{analyze_id}")
         
         last_progress = -1
+        polls = 0
         try:
-            while True:
+            while polls < SSE_MAX_POLLS:
                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                 if message:
                     data = json.loads(message["data"])
@@ -194,7 +204,8 @@ async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)
                     if data.get("status") == "complete" or data.get("done"):
                         yield f"event: complete\ndata: {json.dumps(data)}\n\n"
                         break
-                await asyncio.sleep(0.1)
+                polls += 1
+                await asyncio.sleep(SSE_POLL_INTERVAL)
         except asyncio.CancelledError:
             logger.info(f"SSE Client disconnected from event stream for {analyze_id}")
         finally:
@@ -422,4 +433,4 @@ async def api_designs(db: AsyncSession = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
     reload = os.getenv("UVICORN_RELOAD", "1") == "1"
-    uvicorn.run("backend.server:app", host="0.0.0.0", port=5000, reload=reload)
+    uvicorn.run("backend.server:app", host="0.0.0.0", port=DEFAULT_API_PORT, reload=reload)
