@@ -29,7 +29,7 @@ class AnalysisModel(Base):
     detail = Column(String, default="")
     error = Column(String, nullable=True)
     done = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
 
     # Scraped metadata & design system details
     title = Column(String, nullable=True)
@@ -45,3 +45,4 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
         # WAL mode is database-persistent
         await conn.exec_driver_sql("PRAGMA journal_mode=WAL")
+        await conn.exec_driver_sql("PRAGMA wal_checkpoint(TRUNCATE)")

@@ -36,6 +36,7 @@ async def run_analysis_task(ctx, analyze_id: str, url: str):
     d = get_analysis_dir(analyze_id)
     
     loop = asyncio.get_running_loop()
+    progress_tasks = set()
     
     def progress_callback(stage: str, pct: int, detail: str = ""):
         # Define the async operation to update SQLite and publish to Redis
@@ -62,12 +63,18 @@ async def run_analysis_task(ctx, analyze_id: str, url: str):
             except Exception as e:
                 logger.error(f"Error in progress_callback update: {e}")
 
-        # Schedule the coroutine on the running loop
-        loop.create_task(update_progress())
+        # Schedule the coroutine on the running loop and keep a strong reference
+        task = loop.create_task(update_progress())
+        progress_tasks.add(task)
+        task.add_done_callback(progress_tasks.discard)
 
     try:
         # Run the async analysis pipeline
         result = await run_analysis(url, progress_callback)
+        
+        # Await any remaining progress updates before finalizing
+        if progress_tasks:
+            await asyncio.gather(*progress_tasks, return_exceptions=True)
         
         if "error" in result:
             logger.error(f"Analysis task failed for {analyze_id}: {result['error']}")
@@ -156,6 +163,10 @@ async def run_analysis_task(ctx, analyze_id: str, url: str):
         
     except Exception as e:
         logger.exception(f"Exception raised in analysis task {analyze_id}: {e}")
+        # Await any remaining progress updates before finalizing the error state
+        if progress_tasks:
+            await asyncio.gather(*progress_tasks, return_exceptions=True)
+            
         async with AsyncSessionLocal() as session:
             db_analysis = await session.get(AnalysisModel, analyze_id)
             if db_analysis:

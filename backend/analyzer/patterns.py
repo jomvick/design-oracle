@@ -22,7 +22,7 @@ def detect_ux_patterns(html: str) -> list[dict]:
     html_lower = html.lower()
 
     for name, description, comp_type, keywords in UX_PATTERNS:
-        confidence = 40
+        confidence = 0
 
         if comp_type:
             for tag in soup.find_all(["section", "div", "nav", "header", "footer"]):

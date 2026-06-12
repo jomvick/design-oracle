@@ -5,12 +5,17 @@ import logging
 import os
 import shutil
 import uuid
+import ipaddress
+import socket
+from urllib.parse import urlparse
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as aioredis
 from arq import create_pool
@@ -37,6 +42,38 @@ def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+def is_safe_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+            
+        hostname_lower = hostname.lower()
+        if hostname_lower in ("localhost", "localhost.localdomain"):
+            allow_private = os.getenv("ALLOW_PRIVATE_IPS", "false").lower() in ("true", "1", "yes")
+            return allow_private
+
+        allow_private = os.getenv("ALLOW_PRIVATE_IPS", "false").lower() in ("true", "1", "yes")
+        try:
+            addrinfo = socket.getaddrinfo(hostname, None)
+            for family, _, _, _, sockaddr in addrinfo:
+                ip_str = sockaddr[0]
+                ip = ipaddress.ip_address(ip_str)
+                if not allow_private:
+                    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast:
+                        return False
+        except socket.gaierror:
+            # If resolution fails, it is unreachable or invalid
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"URL security check failed for {url}: {e}")
+        return False
 
 # --- Pydantic Schemas ---
 class AnalyzePayload(BaseModel):
@@ -122,6 +159,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # --- API Routes ---
 
 @app.get("/api/health")
@@ -129,10 +174,37 @@ async def api_health():
     return {"status": "ok", "service": "design-oracle-api"}
 
 @app.post("/api/analyze")
-async def api_analyze(payload: AnalyzePayload, db: AsyncSession = Depends(get_db)):
+async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSession = Depends(get_db)):
     url = payload.url.strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL manquante")
+
+    # 1. SSRF / URL safety check
+    if not is_safe_url(url):
+        raise HTTPException(status_code=400, detail="URL invalide ou non autorisée")
+
+    # 2. Redis-based Rate Limiting (max 5 requests per 60 seconds per client IP)
+    client_ip = request.client.host if request.client else "unknown"
+    rate_limit_key = f"rate_limit:{client_ip}"
+    redis = request.app.state.redis_client
+    
+    try:
+        current_requests = await redis.get(rate_limit_key)
+        if current_requests and int(current_requests) >= 5:
+            raise HTTPException(
+                status_code=429, 
+                detail="Trop de requêtes d'analyse. Veuillez réessayer dans une minute."
+            )
+        
+        async with redis.pipeline(transaction=True) as pipe:
+            await pipe.incr(rate_limit_key)
+            await pipe.expire(rate_limit_key, 60)
+            await pipe.execute()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur de vérification du rate limit: {e}")
+        # fallback: continue if Redis check fails to prevent total API outage
 
     analyze_id = str(uuid.uuid4())[:8]
     get_analysis_dir(analyze_id) # Prepare output directory
@@ -346,7 +418,6 @@ async def api_export_design_md(analyze_id: str):
 @app.delete("/api/analyze/{analyze_id}")
 async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db)):
     validate_analyze_id(analyze_id)
-    from sqlalchemy import select
     stmt = select(AnalysisModel).where(AnalysisModel.id == analyze_id)
     res = await db.execute(stmt)
     analysis = res.scalar_one_or_none()
@@ -362,8 +433,7 @@ async def api_delete_analysis(analyze_id: str, db: AsyncSession = Depends(get_db
 async def cleanup_old_analyses(db: AsyncSession, days: int = 7):
     """Delete analysis directories and DB records older than X days, skipping in-progress ones"""
     try:
-        from sqlalchemy import select
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.UTC)
         cutoff = now - datetime.timedelta(days=days)
 
         # Find eligible records
@@ -413,7 +483,6 @@ async def api_maintenance_cleanup(
 
 @app.get("/api/designs")
 async def api_designs(db: AsyncSession = Depends(get_db)):
-    from sqlalchemy import select
     stmt = select(AnalysisModel).order_by(AnalysisModel.created_at.desc())
     res = await db.execute(stmt)
     analyses_list = res.scalars().all()

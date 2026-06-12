@@ -23,23 +23,26 @@ def _api_url(path: str) -> str:
 
 
 def _list_analyses():
-    results = []
-    if ANALYSES_DIR.exists():
-        for d in sorted(ANALYSES_DIR.iterdir(), reverse=True):
-            rp = d / "result.json"
-            if rp.exists():
-                try:
-                    data = json.loads(rp.read_text(encoding="utf-8"))
-                    results.append({
-                        "id": d.name,
-                        "url": data.get("url", ""),
-                        "title": data.get("title", ""),
-                        "style": data.get("dna", {}).get("style"),
-                        "visual_score": data.get("dna", {}).get("visual_score"),
-                    })
-                except Exception as e:
-                    logger.warning("Failed to read analysis %s: %s", d.name, e)
-    return results
+    try:
+        r = httpx.get(_api_url("/api/designs"), timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        logger.error("Failed to query designs from API: %s", e)
+        return []
+
+
+@mcp.resource("designoracle://{analyze_id}/{filename}")
+def get_analysis_file(analyze_id: str, filename: str) -> str:
+    """Get a specific analysis file (DESIGN.md, tailwind.config.js, components.jsx, design-tokens.json, result.json)"""
+    if filename not in ("DESIGN.md", "tailwind.config.js", "components.jsx", "design-tokens.json", "result.json"):
+        raise ValueError(f"Unauthorized or invalid filename: {filename}")
+    
+    filepath = ANALYSES_DIR / analyze_id / filename
+    if not filepath.exists():
+        raise FileNotFoundError(f"File not found: {filename} for analysis {analyze_id}")
+    return filepath.read_text(encoding="utf-8")
+
 
 
 # ── Tools ──
