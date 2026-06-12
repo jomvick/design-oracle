@@ -48,6 +48,7 @@ Works standalone or as an [MCP server](AGENT_PROMPT.md) for AI agents (Cursor, C
 ### Option A — Docker Compose (recommended)
 
 ```bash
+cd design-oracle
 cp .env.example .env   # optional — defaults work in Docker
 docker compose up --build -d
 ```
