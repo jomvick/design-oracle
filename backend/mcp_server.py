@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 BASE = Path(__file__).resolve().parent.parent
 ANALYSES_DIR = BASE / "analyses"
+PRESETS_FILE = Path(__file__).resolve().parent / "data" / "inspirations.json"
 
 BASE_URL = os.getenv("DESIGN_ORACLE_URL", "http://localhost:5000")
 TRANSPORT = os.getenv("DESIGN_ORACLE_TRANSPORT", "stdio")
@@ -88,6 +89,18 @@ def get_result(analyze_id: str) -> str:
 def list_analyses() -> str:
     """List all completed analyses"""
     return json.dumps(_list_analyses(), indent=2)
+
+
+@mcp.tool()
+def get_presets() -> str:
+    """List curated inspiration presets (title, category, target_url, tags)"""
+    try:
+        if not PRESETS_FILE.exists():
+            return "[]"
+        return PRESETS_FILE.read_text(encoding="utf-8")
+    except Exception as e:
+        logger.error("Failed to read presets: %s", e)
+        return "[]"
 
 
 @mcp.tool()

@@ -46,6 +46,14 @@ def list_analyses() -> str:
 
 
 @mcp.tool()
+def get_presets() -> str:
+    """List curated inspiration presets from the backend"""
+    r = httpx.get(_api_url("/api/presets"), timeout=10)
+    r.raise_for_status()
+    return r.text
+
+
+@mcp.tool()
 def export_design_md(analyze_id: str) -> str:
     """Export DESIGN.md for an analysis"""
     r = httpx.get(_api_url(f"/api/analyze/{analyze_id}/export/design.md"), timeout=10)

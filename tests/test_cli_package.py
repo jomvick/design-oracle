@@ -19,3 +19,14 @@ def test_package_has_tools():
     names = asyncio.run(_names())
     assert {"analyze_website", "get_status", "get_result", "list_analyses",
             "export_design_md", "export_tailwind", "export_components"} <= names
+
+
+def test_cli_has_presets_tool():
+    import asyncio
+
+    from design_oracle_mcp import server as s
+
+    async def _names():
+        return {t.name for t in await s.mcp.list_tools()}
+
+    assert "get_presets" in asyncio.run(_names())
