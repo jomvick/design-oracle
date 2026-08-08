@@ -32,9 +32,9 @@ export default function InspirationGrid({
     <section className="home-insp">
       <div className="home-gallery-head">
         <span className="home-eyebrow">
-          <span>Featured gallery</span>
+          <span>Design Oracle</span>
         </span>
-        <h2 className="home-gallery-title">Explore design systems</h2>
+        <h2 className="home-gallery-title">Hand-picked design systems</h2>
       </div>
 
       <div className="home-tabs">
