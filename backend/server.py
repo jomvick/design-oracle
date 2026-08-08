@@ -40,6 +40,8 @@ SSE_MAX_POLLS = int(ARQ_JOB_TIMEOUT_SECONDS / SSE_POLL_INTERVAL) + 100
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", DEFAULT_REDIS_PORT))
 
+from backend.resolver import resolve_url
+
 def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
     d.mkdir(parents=True, exist_ok=True)
@@ -189,6 +191,17 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     if not is_safe_url(url):
         raise HTTPException(status_code=400, detail="URL invalide ou non autorisée")
 
+    # 1b. Resolve gallery URLs (Awwwards/SiteInspire) to the real site
+    resolved = await resolve_url(url)
+    if not resolved.get("resolvable") and resolved.get("platform") in (
+        "behance", "dribbble", "mobbin", "designspiration"
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Seuls les sites web en ligne sont analysables. Découvre nos presets ou entre l'URL du site final.",
+        )
+    target_url = resolved.get("target_url") or url
+
     # 2. Redis-based Rate Limiting (max 5 requests per 60 seconds per client IP)
     client_ip = request.client.host if request.client else "unknown"
     rate_limit_key = f"rate_limit:{client_ip}"
@@ -218,7 +231,7 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     # Create DB record in pending state
     status_record = AnalysisModel(
         id=analyze_id,
-        url=url,
+        url=target_url,
         status="pending",
         progress=0,
         stage="Enqueued",
@@ -229,7 +242,7 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     await db.commit()
     
     # Enqueue in ARQ worker queue
-    await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, url)
+    await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, target_url)
     return {"analyze_id": analyze_id, "status": "started"}
 
 @app.get("/api/analyze/{analyze_id}/events")
