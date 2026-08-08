@@ -30,6 +30,13 @@ export default function InspirationGrid({
 
   return (
     <section className="home-insp">
+      <div className="home-gallery-head">
+        <span className="home-eyebrow">
+          <span>Featured gallery</span>
+        </span>
+        <h2 className="home-gallery-title">Explore design systems</h2>
+      </div>
+
       <div className="home-tabs">
         <button
           type="button"

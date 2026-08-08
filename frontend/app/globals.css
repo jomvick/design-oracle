@@ -1013,10 +1013,10 @@ a{color:var(--accent);text-decoration:none}
 /* ─── Inspiration card ─── */
 .home-insp-card{
   overflow:hidden;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.07);
-  background:rgba(18,22,31,.75);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);
+  background:#111111;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
   transition:border-color .15s ease,transform .15s ease,box-shadow .15s ease;
 }
 .home-insp-card:hover{
@@ -1028,7 +1028,7 @@ a{color:var(--accent);text-decoration:none}
   position:relative;
   aspect-ratio:16/10;
   overflow:hidden;
-  background:rgba(8,12,22,.6);
+  background:rgba(0,0,0,.6);
 }
 .home-insp-img{
   width:100%;
