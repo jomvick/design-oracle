@@ -1594,3 +1594,27 @@ a{color:var(--accent);text-decoration:none}
   font-size:13px;
   line-height:1.6;
 }
+
+/* ─── Design Oracle identity — night-blue landing ─── */
+.home-shell{
+  background:#0B0F19;
+}
+.home-shell::before{
+  background-image:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+}
+.home-hero-card,
+.news-card{
+  border-color:rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(18,22,31,.92),rgba(13,17,23,.96));
+}
+.home-input-group{
+  border-color:rgba(255,255,255,.08);
+  background:#0D1117;
+}
+.home-insp-card,
+.work-card,
+.faq-item{
+  background:#12161F;
+}
