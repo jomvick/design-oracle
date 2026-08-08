@@ -19,6 +19,8 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_SETTINGS = RedisSettings(host=REDIS_HOST, port=REDIS_PORT)
 
+ARQ_JOB_TIMEOUT_SECONDS = int(os.getenv("ARQ_JOB_TIMEOUT_SECONDS", "180"))
+
 # File paths
 BASE = Path(__file__).resolve().parent.parent
 ANALYSES_DIR = BASE / "analyses"
@@ -28,6 +30,24 @@ def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+async def _record_failed(ctx, analyze_id: str, message: str):
+    redis_conn = ctx.get('pubsub') or ctx['redis']
+    try:
+        async with AsyncSessionLocal() as session:
+            db_analysis = await session.get(AnalysisModel, analyze_id)
+            if db_analysis:
+                db_analysis.status = "failed"
+                db_analysis.error = message
+                db_analysis.done = True
+                await session.commit()
+    except Exception as e:
+        logger.error(f"Failed to record failed status for {analyze_id}: {e}")
+    try:
+        event_data = {"status": "error", "progress": 0, "error": message, "done": True}
+        await redis_conn.publish(f"analysis_events:{analyze_id}", json.dumps(event_data))
+    except Exception as e:
+        logger.error(f"Failed to publish error event for {analyze_id}: {e}")
 
 async def run_analysis_task(ctx, analyze_id: str, url: str):
     logger.info(f"Starting analysis task for {analyze_id} ({url})")
@@ -161,6 +181,10 @@ async def run_analysis_task(ctx, analyze_id: str, url: str):
         await redis_conn.publish(f"analysis_events:{analyze_id}", json.dumps(event_data))
         logger.info(f"Successfully completed analysis task for {analyze_id}")
         
+    except asyncio.CancelledError:
+        logger.error(f"Analysis task cancelled/timed out for {analyze_id}")
+        await asyncio.shield(_record_failed(ctx, analyze_id, "Analysis timed out (ARQ job_timeout exceeded)"))
+        raise
     except Exception as e:
         logger.exception(f"Exception raised in analysis task {analyze_id}: {e}")
         # Await any remaining progress updates before finalizing the error state
@@ -200,3 +224,4 @@ class WorkerSettings:
     redis_settings = REDIS_SETTINGS
     on_startup = startup
     on_shutdown = shutdown
+    job_timeout = ARQ_JOB_TIMEOUT_SECONDS

@@ -94,8 +94,8 @@ Timeout Playwright (TIMEOUT_SECONDS) < job_timeout ARQ < Timeout SSE/HTTP
 
 - `mcp_server.py` : nouvelle env `DESIGN_ORACLE_TRANSPORT` (`stdio` défaut, `sse` sinon).
   - `stdio` : comportement actuel (`mcp.run()`).
-  - `sse` : exposé via `mcp.sse_app()` (FastMCP).
-- `backend/server.py` : montage de la sous-app MCP sur `/mcp` dans l'app FastAPI existante (un seul service, un seul port 5000, pas de conteneur dédié).
+  - `sse` : exposé via `mcp.http_app(transport="streamable-http")` (FastMCP ≥3.x n'a plus `sse_app()`).
+- `backend/server.py` : montage de la sous-app MCP sur `/mcp` dans l'app FastAPI existante (un seul service, un seul port 5000, pas de conteneur dédié). `http_app(path="/")` + chaînage du lifespan FastMCP dans le lifespan parent.
 - **Ressource `designoracle://{id}/{file}` corrigée** : lire via l'API HTTP (`GET /api/analyze/{id}/export/{...}` + `/result`) au lieu du disque local. Le MCP fonctionne ainsi même déployé hors du poste du backend.
 
 ### 2B. Config multi-éditeurs

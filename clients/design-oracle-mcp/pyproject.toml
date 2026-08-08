@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "design-oracle-mcp"
+version = "0.1.0"
+description = "Lightweight MCP client for Design Oracle (HTTP only, no Playwright)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "fastmcp>=2.0.0",
+    "httpx>=0.28",
+]
+
+[project.scripts]
+design-oracle-mcp = "design_oracle_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["design_oracle_mcp"]

@@ -7,14 +7,35 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
+def visible_element_filter_js() -> str:
+    return """const isVisible = (el) => {
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return false;
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return false;
+        if (el.offsetParent !== null) return true;
+        const pos = cs.position;
+        return pos === 'fixed' || pos === 'absolute' || pos === 'sticky';
+    };
+    const isSemantic = (el) => {
+        const tag = el.tagName.toLowerCase();
+        if (['h1','h2','h3','h4','h5','h6','p','button','a','input',
+             'header','nav','main','section','article','footer'].indexOf(tag) !== -1) return true;
+        const cls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
+        return /(card|panel|widget)/.test(cls);
+    };
+    const relevant = (el) => isVisible(el) && isSemantic(el);
+    """
+
 async def extract_spacing_scale(page) -> dict:
-    js = """() => {
+    js = visible_element_filter_js() + """() => {
         const vals = {};
         const props = ['padding','margin','gap','paddingLeft','paddingRight','paddingTop','paddingBottom',
                        'marginLeft','marginRight','marginTop','marginBottom',
                        'columnGap','rowGap'];
         const els = document.querySelectorAll('*');
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 if (cs.display === 'none') return;
@@ -63,11 +84,12 @@ async def extract_spacing_scale(page) -> dict:
 
 
 async def extract_radius_and_shadows(page) -> dict:
-    js = """() => {
+    js = visible_element_filter_js() + """() => {
         const radii = new Set();
         const shadows = [];
         const els = document.querySelectorAll('*');
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 const br = cs.borderRadius;
@@ -300,7 +322,7 @@ async def detect_components(page, html: str) -> list[dict]:
 
 
 async def analyze_layout(page, html: str) -> dict:
-    layout_info = await page.evaluate("""() => {
+    layout_info = await page.evaluate(visible_element_filter_js() + """() => {
         const info = {
             viewport: { width: window.innerWidth, height: window.innerHeight },
             hasGrid: false,
@@ -314,6 +336,7 @@ async def analyze_layout(page, html: str) -> dict:
         const els = document.querySelectorAll('*');
         let maxW = 0;
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 if (cs.display === 'grid' || cs.display?.includes('-grid')) info.hasGrid = true;
