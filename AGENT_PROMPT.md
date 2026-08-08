@@ -45,12 +45,57 @@ The backend API runs at `http://localhost:5000`. The MCP server connects to it a
 
 **To connect this server to your tool, use:**
 
+## Configuration by tool
+
+The MCP server ships with two transports. Prefer **HTTP (SSE)** when the
+FastAPI backend is running (Docker or local), so no local paths are needed.
+
+### opencode
+
+`opencode.json` (project root):
+
 ```json
 {
   "mcpServers": {
     "design-oracle": {
-      "command": "python3",
-      "args": ["backend/mcp_server.py"],
+      "type": "http",
+      "url": "http://localhost:5000/mcp"
+    }
+  }
+}
+```
+
+### Cursor
+
+`.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "design-oracle": {
+      "type": "http",
+      "url": "http://localhost:5000/mcp"
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add design-oracle --transport http http://localhost:5000/mcp
+```
+
+### Local (stdio) alternative
+
+Only if the backend is not reachable over HTTP:
+
+```json
+{
+  "mcpServers": {
+    "design-oracle": {
+      "command": "uvx",
+      "args": ["design-oracle-mcp"],
       "env": {
         "DESIGN_ORACLE_URL": "http://localhost:5000"
       }

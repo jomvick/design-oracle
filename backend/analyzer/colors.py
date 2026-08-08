@@ -2,6 +2,8 @@ import re
 import math
 from bs4 import BeautifulSoup
 
+from .layout import visible_element_filter_js
+
 COLOR_NAMES = {
     "aliceblue": "#f0f8ff", "antiquewhite": "#faebd7", "aqua": "#00ffff",
     "aquamarine": "#7fffd4", "azure": "#f0ffff", "beige": "#f5f5dc",
@@ -59,26 +61,66 @@ RE_VAR = re.compile(r"var\(--([^)]+)\)")
 RE_CUSTOM_PROP = re.compile(r"--([a-zA-Z0-9-]+)\s*:\s*([^;]+)")
 
 
-def normalize_color(raw: str) -> str | None:
+def hsl_to_rgb(h: float, s: float, l: float) -> tuple[int, int, int]:
+    h = h % 360
+    c = (1 - abs(2 * l - 1)) * s
+    x = c * (1 - abs((h / 60) % 2 - 1))
+    m = l - c / 2
+    if h < 60:
+        r, g, b = c, x, 0
+    elif h < 120:
+        r, g, b = x, c, 0
+    elif h < 180:
+        r, g, b = 0, c, x
+    elif h < 240:
+        r, g, b = 0, x, c
+    elif h < 300:
+        r, g, b = x, 0, c
+    else:
+        r, g, b = c, 0, x
+    return round((r + m) * 255), round((g + m) * 255), round((b + m) * 255)
+
+
+def parse_color(raw: str) -> dict | None:
     raw = raw.strip().lower()
     if raw in COLOR_NAMES:
         raw = COLOR_NAMES[raw]
+
     m = RE_HEX.match(raw)
     if m:
         h = m.group(1)
-        if len(h) == 3:
+        alpha = None
+        if len(h) in (3, 4):
             h = "".join(c * 2 for c in h)
-        elif len(h) == 4:
-            h = "".join(c * 2 for c in h)
-        elif len(h) == 8:
+        if len(h) == 8:
+            alpha = round(int(h[6:8], 16) / 255, 3)
             h = h[:6]
-        return f"#{h.lower()}"
+        return {"hex": f"#{h.lower()}", "alpha": alpha, "raw": raw}
+
     m = RE_RGB.match(raw)
     if m:
         parts = re.findall(r"[\d.]+", m.group(2))
         nums = [float(p) for p in parts[:3]]
-        return f"#{int(nums[0]):02x}{int(nums[1]):02x}{int(nums[2]):02x}"
+        alpha = float(parts[3]) if len(parts) > 3 and m.group(1) else None
+        return {
+            "hex": f"#{int(nums[0]):02x}{int(nums[1]):02x}{int(nums[2]):02x}",
+            "alpha": alpha,
+            "raw": raw,
+        }
+
+    m = RE_HSL.match(raw)
+    if m:
+        parts = re.findall(r"[\d.]+", m.group(2))
+        r, g, b = hsl_to_rgb(float(parts[0]), float(parts[1]) / 100, float(parts[2]) / 100)
+        alpha = float(parts[3]) if len(parts) > 3 and m.group(1) else None
+        return {"hex": f"#{r:02x}{g:02x}{b:02x}", "alpha": alpha, "raw": raw}
+
     return None
+
+
+def normalize_color(raw: str) -> str | None:
+    c = parse_color(raw)
+    return c["hex"] if c else None
 
 
 def luminance(hex_color: str) -> float:
@@ -191,7 +233,7 @@ def classify_semantic_color(hex_color: str, all_hex: list[str]) -> str:
 
 
 async def extract_colors(page, html: str) -> dict:
-    js_colors = await page.evaluate("""() => {
+    js_colors = await page.evaluate(visible_element_filter_js() + """() => {
         const colors = {};
         const props = ['color','background-color','background','border-color',
                        'border-top-color','border-bottom-color','border-left-color',
@@ -201,6 +243,7 @@ async def extract_colors(page, html: str) -> dict:
         const seen = new Set();
         const compStyles = new Map();
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 props.forEach(prop => {

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "stripe-press",
+    "title": "Stripe Press",
+    "category": "SaaS / Editorial",
+    "target_url": "https://press.stripe.com",
+    "gallery_url": "https://www.awwwards.com/sites/stripe-press",
+    "source_platform": "awwwards",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fpress.stripe.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fpress.stripe.com?w=400&h=300",
+    "tags": ["Minimal", "Typography", "Dark"]
+  },
+  {
+    "id": "linear",
+    "title": "Linear",
+    "category": "SaaS / Product",
+    "target_url": "https://linear.app",
+    "gallery_url": "https://www.awwwards.com/sites/linear",
+    "source_platform": "awwwards",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Flinear.app?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Flinear.app?w=400&h=300",
+    "tags": ["Dark Mode", "SaaS", "Clean"]
+  },
+  {
+    "id": "vercel",
+    "title": "Vercel",
+    "category": "Developer Tools",
+    "target_url": "https://vercel.com",
+    "gallery_url": "https://www.siteinspire.com/websites/6249-vercel",
+    "source_platform": "siteinspire",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fvercel.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fvercel.com?w=400&h=300",
+    "tags": ["Developer", "Minimal", "Branding"]
+  },
+  {
+    "id": "raycast",
+    "title": "Raycast",
+    "category": "Developer Tools",
+    "target_url": "https://www.raycast.com",
+    "gallery_url": "https://www.siteinspire.com/websites/raycast",
+    "source_platform": "siteinspire",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.raycast.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.raycast.com?w=400&h=300",
+    "tags": ["Dark Mode", "SaaS", "Clean"]
+  },
+  {
+    "id": "airbnb",
+    "title": "Airbnb",
+    "category": "Marketplace / Mobile",
+    "target_url": "https://www.airbnb.com",
+    "gallery_url": "https://mobbin.com/apps/airbnb",
+    "source_platform": "mobbin",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.airbnb.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.airbnb.com?w=400&h=300",
+    "tags": ["Marketplace", "Mobile", "UX"]
+  },
+  {
+    "id": "spotify",
+    "title": "Spotify",
+    "category": "Entertainment / Mobile",
+    "target_url": "https://open.spotify.com",
+    "gallery_url": "https://mobbin.com/apps/spotify",
+    "source_platform": "mobbin",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fopen.spotify.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fopen.spotify.com?w=400&h=300",
+    "tags": ["Dark Mode", "Mobile", "Playlists"]
+  },
+  {
+    "id": "figma",
+    "title": "Figma",
+    "category": "Design Tools",
+    "target_url": "https://www.figma.com",
+    "gallery_url": "https://www.behance.net/gallery/figma-design-tool",
+    "source_platform": "behance",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.figma.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.figma.com?w=400&h=300",
+    "tags": ["Collaboration", "SaaS", "Design"]
+  },
+  {
+    "id": "notion",
+    "title": "Notion",
+    "category": "Productivity",
+    "target_url": "https://www.notion.so",
+    "gallery_url": "https://www.behance.net/gallery/notion-brand",
+    "source_platform": "behance",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.notion.so?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.notion.so?w=400&h=300",
+    "tags": ["Productivity", "Minimal", "Branding"]
+  },
+  {
+    "id": "framer",
+    "title": "Framer",
+    "category": "Design Tools",
+    "target_url": "https://www.framer.com",
+    "gallery_url": "https://dribbble.com/shots/framer-website",
+    "source_platform": "dribbble",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.framer.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.framer.com?w=400&h=300",
+    "tags": ["Interactive", "SaaS", "Motion"]
+  },
+  {
+    "id": "loom",
+    "title": "Loom",
+    "category": "Productivity / Video",
+    "target_url": "https://www.loom.com",
+    "gallery_url": "https://dribbble.com/shots/loom-website",
+    "source_platform": "dribbble",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.loom.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.loom.com?w=400&h=300",
+    "tags": ["Video", "SaaS", "Clean"]
+  },
+  {
+    "id": "apple",
+    "title": "Apple",
+    "category": "Consumer / Branding",
+    "target_url": "https://www.apple.com",
+    "gallery_url": "https://www.designspiration.net/search/apple-brand",
+    "source_platform": "designspiration",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.apple.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fwww.apple.com?w=400&h=300",
+    "tags": ["Minimal", "E-commerce", "Premium"]
+  },
+  {
+    "id": "openai",
+    "title": "OpenAI",
+    "category": "AI / Branding",
+    "target_url": "https://openai.com",
+    "gallery_url": "https://www.designspiration.net/search/openai",
+    "source_platform": "designspiration",
+    "preview_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fopenai.com?w=800&h=600",
+    "fallback_image": "https://s0.wp.com/mshots/v1/https%3A%2F%2Fopenai.com?w=400&h=300",
+    "tags": ["AI", "Minimal", "Typography"]
+  }
+]

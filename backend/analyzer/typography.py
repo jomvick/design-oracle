@@ -1,10 +1,13 @@
 from bs4 import BeautifulSoup
 
+from .layout import visible_element_filter_js
+
 async def extract_typography(page) -> dict:
-    fonts = await page.evaluate("""() => {
+    fonts = await page.evaluate(visible_element_filter_js() + """() => {
         const fonts = {};
         const els = document.querySelectorAll('*');
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 const family = cs.fontFamily;

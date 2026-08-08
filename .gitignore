@@ -32,3 +32,6 @@ Thumbs.db
 
 # Redis
 dump.rdb
+
+# Git worktrees
+.worktrees/

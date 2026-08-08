@@ -22,6 +22,7 @@ from arq import create_pool
 from arq.connections import RedisSettings
 
 from backend.database import init_db, AsyncSessionLocal, AnalysisModel
+from backend.mcp_server import mcp as mcp_app
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,10 +34,13 @@ ANALYSES_DIR.mkdir(exist_ok=True)
 DEFAULT_REDIS_PORT = 6379
 DEFAULT_API_PORT = 5000
 SSE_POLL_INTERVAL = 0.1
-SSE_MAX_POLLS = 3000
+ARQ_JOB_TIMEOUT_SECONDS = int(os.getenv("ARQ_JOB_TIMEOUT_SECONDS", "180"))
+SSE_MAX_POLLS = int(ARQ_JOB_TIMEOUT_SECONDS / SSE_POLL_INTERVAL) + 100
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", DEFAULT_REDIS_PORT))
+
+from backend.resolver import resolve_url
 
 def get_analysis_dir(analyze_id: str):
     d = ANALYSES_DIR / analyze_id
@@ -151,7 +155,8 @@ async def lifespan(app: FastAPI):
     app.state.redis_pool = await create_pool(RedisSettings(host=REDIS_HOST, port=REDIS_PORT))
     app.state.redis_client = await aioredis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True)
     logger.info("FastAPI resources initialized.")
-    yield
+    async with mcp_http_app.lifespan(mcp_http_app):
+        yield
     # Cleanup Redis
     await app.state.redis_pool.close()
     await app.state.redis_client.close()
@@ -166,6 +171,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+mcp_http_app = mcp_app.http_app(transport="streamable-http", path="/")
+app.mount("/mcp", mcp_http_app)
 
 # --- API Routes ---
 
@@ -182,6 +190,17 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     # 1. SSRF / URL safety check
     if not is_safe_url(url):
         raise HTTPException(status_code=400, detail="URL invalide ou non autorisée")
+
+    # 1b. Resolve gallery URLs (Awwwards/SiteInspire) to the real site
+    resolved = await resolve_url(url)
+    if not resolved.get("resolvable") and resolved.get("platform") in (
+        "behance", "dribbble", "mobbin", "designspiration"
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Seuls les sites web en ligne sont analysables. Découvre nos presets ou entre l'URL du site final.",
+        )
+    target_url = resolved.get("target_url") or url
 
     # 2. Redis-based Rate Limiting (max 5 requests per 60 seconds per client IP)
     client_ip = request.client.host if request.client else "unknown"
@@ -212,7 +231,7 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     # Create DB record in pending state
     status_record = AnalysisModel(
         id=analyze_id,
-        url=url,
+        url=target_url,
         status="pending",
         progress=0,
         stage="Enqueued",
@@ -223,7 +242,7 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     await db.commit()
     
     # Enqueue in ARQ worker queue
-    await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, url)
+    await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, target_url)
     return {"analyze_id": analyze_id, "status": "started"}
 
 @app.get("/api/analyze/{analyze_id}/events")
@@ -498,6 +517,14 @@ async def api_designs(db: AsyncSession = Depends(get_db)):
             "complexity": a.dna.get("complexity") if a.dna else None,
         })
     return designs
+
+PRESETS_FILE = Path(__file__).resolve().parent / "data" / "inspirations.json"
+
+@app.get("/api/presets")
+async def api_presets():
+    if not PRESETS_FILE.exists():
+        return []
+    return json.loads(PRESETS_FILE.read_text(encoding="utf-8"))
 
 if __name__ == "__main__":
     import uvicorn
