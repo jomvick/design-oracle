@@ -100,6 +100,8 @@ def parse_color(raw: str) -> dict | None:
     m = RE_RGB.match(raw)
     if m:
         parts = re.findall(r"[\d.]+", m.group(2))
+        if len(parts) < 3:
+            return None
         nums = [float(p) for p in parts[:3]]
         alpha = float(parts[3]) if len(parts) > 3 and m.group(1) else None
         return {
@@ -111,6 +113,8 @@ def parse_color(raw: str) -> dict | None:
     m = RE_HSL.match(raw)
     if m:
         parts = re.findall(r"[\d.]+", m.group(2))
+        if len(parts) < 3:
+            return None
         r, g, b = hsl_to_rgb(float(parts[0]), float(parts[1]) / 100, float(parts[2]) / 100)
         alpha = float(parts[3]) if len(parts) > 3 and m.group(1) else None
         return {"hex": f"#{r:02x}{g:02x}{b:02x}", "alpha": alpha, "raw": raw}

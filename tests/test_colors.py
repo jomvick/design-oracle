@@ -34,3 +34,19 @@ def test_normalize_hsla():
 def test_normalize_invalid_returns_none():
     assert normalize_color("not-a-color") is None
     assert parse_color("") is None
+
+def test_normalize_malformed_rgb_var_returns_none():
+    assert normalize_color("rgb(var(--x))") is None
+    assert parse_color("rgb(var(--x))") is None
+
+def test_normalize_malformed_empty_rgb_returns_none():
+    assert normalize_color("rgb()") is None
+    assert normalize_color("rgba()") is None
+    assert normalize_color("hsl()") is None
+
+def test_normalize_short_rgb_returns_none():
+    assert normalize_color("rgb(255)") is None
+    assert normalize_color("rgba(255, 0)") is None
+
+def test_normalize_rgb_space_syntax():
+    assert normalize_color("rgb(255 0 0)") == "#ff0000"
