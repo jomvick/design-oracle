@@ -170,7 +170,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-mcp_http_app = mcp_app.http_app(transport="streamable-http")
+mcp_http_app = mcp_app.http_app(transport="streamable-http", path="/")
 app.mount("/mcp", mcp_http_app)
 
 # --- API Routes ---
