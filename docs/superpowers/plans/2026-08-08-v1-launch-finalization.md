@@ -28,7 +28,7 @@
 **Interfaces:**
 - Produces: `classify_url(url: str) -> tuple[str, bool]`, `resolve_url(url: str) -> dict` (`{"platform", "resolvable", "target_url"?}`). Used by Task 2.
 
-- [ ] **Step 1: Create `backend/resolver.py`**
+- [x] **Step 1: Create `backend/resolver.py`**
 
 Copy the file verbatim from `feature/inspiration-dashboard`:
 
@@ -38,7 +38,7 @@ git show feature/inspiration-dashboard:backend/resolver.py > backend/resolver.py
 
 Content is `classify_url` (6 gallery platforms + unknown), `_extract_target` (visit-label anchor → first external anchor → canonical), `resolve_url` (httpx GET with `RESOLVE_TIMEOUT = 10.0`, `follow_redirects=True`, parse errors → `{"platform", "resolvable": False}`).
 
-- [ ] **Step 2: Create `tests/test_resolve.py`**
+- [x] **Step 2: Create `tests/test_resolve.py`**
 
 Copy verbatim:
 
@@ -46,17 +46,17 @@ Copy verbatim:
 git show feature/inspiration-dashboard:tests/test_resolve.py > tests/test_resolve.py
 ```
 
-- [ ] **Step 3: Run tests to verify they pass**
+- [x] **Step 3: Run tests to verify they pass**
 
 Run: `.venv/bin/python -m unittest tests.test_resolve -v`
 Expected: all 10 tests pass (7 classify + 3 resolve, using unittest stdlib).
 
-- [ ] **Step 4: Verify import**
+- [x] **Step 4: Verify import**
 
 Run: `.venv/bin/python -c "from backend.resolver import classify_url, resolve_url; print('OK')"`
 Expected: `OK`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/resolver.py tests/test_resolve.py
@@ -75,7 +75,7 @@ git commit -m "feat: port gallery URL resolver with classification and extractio
 - Consumes: `resolve_url` from Task 1.
 - Produces: `target_url` used for the DB record and the ARQ job payload.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_analyze_resolver.py`:
 
@@ -134,13 +134,13 @@ to connect to real Redis. Setting `app.state` manually and issuing plain
 `client.post(...)` avoids that. `create=True` on the `resolve_url` patch lets
 the test import before the wiring exists (fail-first).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `.venv/bin/pytest tests/test_analyze_resolver.py -v`
 Expected: FAIL — `enqueue_job` receives the original gallery URL
 (`https://www.awwwards.com/...`), not the resolved target.
 
-- [ ] **Step 3: Wire resolver into `api_analyze`**
+- [x] **Step 3: Wire resolver into `api_analyze`**
 
 In `backend/server.py`:
 
@@ -172,17 +172,17 @@ from backend.resolver import resolve_url
     await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, target_url)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `.venv/bin/pytest tests/test_analyze_resolver.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Run full suite + import check**
+- [x] **Step 5: Run full suite + import check**
 
 Run: `.venv/bin/pytest tests/ -q` and `.venv/bin/python -c "from backend.server import app; print('OK')"`
 Expected: all green; `OK`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/server.py tests/test_analyze_resolver.py
@@ -201,7 +201,7 @@ git commit -m "feat: resolve gallery URLs in /api/analyze before enqueue"
 **Interfaces:**
 - Produces: `backend/data/inspirations.json` (12 presets), `GET /api/presets` → JSON array. Consumed by Task 4 (MCP tool reads the file) and Task 4b (PyPI tool calls the endpoint).
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 `tests/test_presets.py`:
 
@@ -222,12 +222,12 @@ def test_api_presets_returns_list():
 Note: no `with client:` block — that would run the FastAPI lifespan and try to
 connect to Redis. Plain `client.get(...)` avoids it.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `.venv/bin/pytest tests/test_presets.py -v`
 Expected: FAIL — 404 (endpoint missing).
 
-- [ ] **Step 3: Create `backend/data/inspirations.json`**
+- [x] **Step 3: Create `backend/data/inspirations.json`**
 
 Copy the 12-preset file from the other branch:
 
@@ -236,7 +236,7 @@ mkdir -p backend/data
 git show feature/inspiration-dashboard:frontend/lib/inspirations.json > backend/data/inspirations.json
 ```
 
-- [ ] **Step 4: Add `GET /api/presets`**
+- [x] **Step 4: Add `GET /api/presets`**
 
 In `backend/server.py`, add near the other GET routes (e.g., before `/api/designs`):
 
@@ -250,12 +250,12 @@ async def api_presets():
     return json.loads(PRESETS_FILE.read_text(encoding="utf-8"))
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `.venv/bin/pytest tests/test_presets.py -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/data/inspirations.json backend/server.py tests/test_presets.py
@@ -276,7 +276,7 @@ git commit -m "feat: shared presets file and GET /api/presets"
 - Consumes: `backend/data/inspirations.json` (Task 3), `GET /api/presets` (Task 3).
 - Produces: `get_presets()` MCP tool in both servers.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `tests/test_mcp.py`, add:
 
@@ -300,12 +300,12 @@ def test_cli_has_presets_tool():
     assert "get_presets" in asyncio.run(_names())
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `.venv/bin/pytest tests/test_mcp.py::test_mcp_has_presets_tool tests/test_cli_package.py::test_cli_has_presets_tool -v`
 Expected: FAIL — `get_presets` not in tool names.
 
-- [ ] **Step 3: Add tool to `backend/mcp_server.py`**
+- [x] **Step 3: Add tool to `backend/mcp_server.py`**
 
 ```python
 from pathlib import Path
@@ -326,7 +326,7 @@ def get_presets() -> str:
 
 (`from pathlib import Path` already imported in `mcp_server.py`.)
 
-- [ ] **Step 4: Add tool to `clients/design-oracle-mcp/design_oracle_mcp/server.py`**
+- [x] **Step 4: Add tool to `clients/design-oracle-mcp/design_oracle_mcp/server.py`**
 
 ```python
 @mcp.tool()
@@ -337,12 +337,12 @@ def get_presets() -> str:
     return r.text
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `.venv/bin/pytest tests/test_mcp.py::test_mcp_has_presets_tool tests/test_cli_package.py::test_cli_has_presets_tool -v`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/mcp_server.py clients/design-oracle-mcp/design_oracle_mcp/server.py tests/test_mcp.py tests/test_cli_package.py
@@ -360,7 +360,7 @@ git commit -m "feat: get_presets MCP tool in backend and PyPI client"
 **Interfaces:**
 - Consumes: `backend.analyzer.core.run_analysis` (browser lifecycle), export routes on `backend.server`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `tests/test_timeouts.py`, add:
 
@@ -406,14 +406,14 @@ def test_browser_closed_on_navigation_timeout():
 Verified working: `page.goto` raises → nav loop exhausts → early `return` →
 `finally` still awaits `browser.close()` exactly once (T4's `try/finally`).
 
-- [ ] **Step 2: Run test to verify it passes**
+- [x] **Step 2: Run test to verify it passes**
 
 Run: `.venv/bin/pytest tests/test_timeouts.py::test_browser_closed_on_navigation_timeout -v`
 Expected: PASS — this is a regression guard proving the T4 `finally` closes the
 browser even when navigation fails. If it FAILS, the `finally` cleanup is broken
 and must be fixed before continuing.
 
-- [ ] **Step 3: Create `tests/test_exports.py`**
+- [x] **Step 3: Create `tests/test_exports.py`**
 
 ```python
 import json
@@ -449,12 +449,12 @@ def test_export_chain_returns_all_files(fake_analysis):
 Note: the analyze id must be ≥8 chars (`validate_analyze_id` rejects shorter),
 hence `test1234`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `.venv/bin/pytest tests/test_exports.py tests/test_timeouts.py -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/test_timeouts.py tests/test_exports.py
@@ -469,7 +469,7 @@ git commit -m "test: browser close on timeout and export chain"
 - Create: `start-public.sh`
 - Modify: `README.md` (deployment section)
 
-- [ ] **Step 1: Create `start-public.sh`**
+- [x] **Step 1: Create `start-public.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -496,7 +496,7 @@ cloudflared tunnel --url http://localhost:3000
 
 Make executable: `chmod +x start-public.sh`
 
-- [ ] **Step 2: Add README deployment section**
+- [x] **Step 2: Add README deployment section**
 
 Under `## MCP Server` (or a new `## Deploy to the public internet` section before `## Known limitations`):
 
@@ -520,12 +520,12 @@ Serve the app from your machine with a free HTTPS URL via Cloudflare Tunnel:
 `npm run dev`.
 ```
 
-- [ ] **Step 3: Shell syntax check**
+- [x] **Step 3: Shell syntax check**
 
 Run: `bash -n start-public.sh`
 Expected: no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add start-public.sh README.md
@@ -540,7 +540,7 @@ git commit -m "feat: Cloudflare Tunnel launch script and README section"
 - Create: `docs/launch/launch-post.md`
 - Create: `docs/launch/screencast-guide.md`
 
-- [ ] **Step 1: Create `docs/launch/launch-post.md`**
+- [x] **Step 1: Create `docs/launch/launch-post.md`**
 
 ```markdown
 # Post de lancement — Design Oracle V1
@@ -580,7 +580,7 @@ appel à tester les 10 premiers utilisateurs, et un exemple concret
   format « Show HN ».
 ```
 
-- [ ] **Step 2: Create `docs/launch/screencast-guide.md`**
+- [x] **Step 2: Create `docs/launch/screencast-guide.md`**
 
 ```markdown
 # Guide de capture — GIF / vidéo 20 s
@@ -607,12 +607,12 @@ appel à tester les 10 premiers utilisateurs, et un exemple concret
 - Exporte en 10-15 FPS, < 8 Mo pour X.
 ```
 
-- [ ] **Step 3: Verify files exist**
+- [x] **Step 3: Verify files exist**
 
 Run: `ls docs/launch/`
 Expected: `launch-post.md` `screencast-guide.md`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/launch/
@@ -626,22 +626,22 @@ git commit -m "docs: launch post and screencast guide"
 **Files:**
 - None (verification only)
 
-- [ ] **Step 1: Run full backend test suite**
+- [x] **Step 1: Run full backend test suite**
 
 Run: `.venv/bin/pytest tests/ -v`
 Expected: all tests PASS (colors, layout filter, stealth, timeouts, mcp, cli, resolve, analyze-resolver, presets, exports).
 
-- [ ] **Step 2: Import/CI check**
+- [x] **Step 2: Import/CI check**
 
 Run: `.venv/bin/python -c "from backend.server import app; from backend.worker import WorkerSettings; from backend.resolver import resolve_url; print('OK')"`
 Expected: `OK`.
 
-- [ ] **Step 3: Smoke — presets via API**
+- [x] **Step 3: Smoke — presets via API**
 
 Run: `.venv/bin/python -c "from fastapi.testclient import TestClient; from backend.server import app; c=TestClient(app); print(len(c.get('/api/presets').json()))"`
 Expected: `12`.
 
-- [ ] **Step 4: Smoke — resolver end-to-end (network permitting)**
+- [x] **Step 4: Smoke — resolver end-to-end (network permitting)**
 
 Run: `.venv/bin/python -c "
 import asyncio
@@ -650,7 +650,7 @@ print(asyncio.run(resolve_url('https://www.awwwards.com/sites/stripe-press')))
 "`
 Expected: `{'platform': 'awwwards', 'resolvable': True, 'target_url': 'https://press.stripe.com'}` (requires network; if DNS unavailable, expect `resolvable: False` fallback — acceptable).
 
-- [ ] **Step 5: No-op commit guard**
+- [x] **Step 5: No-op commit guard**
 
 Run: `git status --short`
 Expected: clean tree (only intended files).
