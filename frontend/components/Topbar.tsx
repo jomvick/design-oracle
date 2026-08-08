@@ -13,7 +13,7 @@ export default function Topbar() {
     <header
       className={cn(
         "sticky top-0 z-50 flex h-[60px] items-center justify-between px-8",
-        "border-b border-white/[0.06] bg-[#0B0F19]/70 backdrop-blur-xl"
+        "border-b border-white/[0.08] bg-[#080808]/70 backdrop-blur-xl"
       )}
     >
       {/* Marque minimaliste — accent violet réservé à l'IA */}

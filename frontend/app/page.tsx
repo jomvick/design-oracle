@@ -6,6 +6,9 @@ import { getDesigns } from "@/lib/api";
 import type { DesignSummary } from "@/lib/types";
 import HeroSearch from "@/components/HeroSearch";
 import InspirationGrid from "@/components/InspirationGrid";
+import WorkflowSection from "@/components/WorkflowSection";
+import NewsletterSection from "@/components/NewsletterSection";
+import FaqSection from "@/components/FaqSection";
 import type { FilterValue } from "@/components/InspirationFilter";
 import inspirations from "@/lib/inspirations.json";
 import type { InspirationPreset } from "@/lib/types";
@@ -46,6 +49,9 @@ export default function HomePage() {
         onDelete={(id) => setDesigns((prev) => prev.filter((x) => x.id !== id))}
         onAnalyze={handleAnalyze}
       />
+      <WorkflowSection />
+      <NewsletterSection />
+      <FaqSection />
     </main>
   );
 }
