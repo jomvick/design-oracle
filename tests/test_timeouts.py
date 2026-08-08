@@ -25,3 +25,40 @@ def test_core_timout_seconds_default():
     import backend.analyzer.core as c
     importlib.reload(c)
     assert c.TIMEOUT_SECONDS == 30
+
+
+import asyncio
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+
+def test_browser_closed_on_navigation_timeout():
+    import backend.analyzer.core as c
+
+    browser = MagicMock()
+    browser.close = AsyncMock()
+    context = MagicMock()
+    browser.new_context = AsyncMock(return_value=context)
+    page = MagicMock()
+    context.new_page = AsyncMock(return_value=page)
+    page.goto = AsyncMock(side_effect=Exception("timeout"))
+
+    class FakePW:
+        chromium = MagicMock()
+        chromium.launch = AsyncMock(return_value=browser)
+
+    class FakeCM:
+        def __init__(self, pw):
+            self.pw = pw
+        async def __aenter__(self):
+            return self.pw
+        async def __aexit__(self, *args):
+            return False
+
+    fake = MagicMock(async_playwright=lambda: FakeCM(FakePW()))
+
+    with patch.dict(sys.modules, {"playwright.async_api": fake}):
+        importlib.reload(c)
+        asyncio.run(c.run_analysis("https://slow.example"))
+
+    assert browser.close.await_count >= 1
