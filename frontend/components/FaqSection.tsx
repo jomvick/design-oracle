@@ -7,15 +7,15 @@ import { cn } from "@/lib/cn";
 const FAQS = [
   {
     q: "What is a DESIGN.md?",
-    a: "It's a Markdown file that describes a website's design system — colors, typography, components, spacing, and layout patterns — so an AI coding agent can match your app's visual style.",
+    a: "A Markdown file describing a website's design system — colors, typography, components, spacing, and layout — so an AI coding agent can match your app's visual style.",
   },
   {
     q: "Which sites can I analyze?",
-    a: "Paste any live website URL. Gallery pages from Awwwards and SiteInspire are auto-resolved to the real site. Behance, Dribbble, Mobbin, and Designspiration links show a guide instead.",
+    a: "Any live website URL. Awwwards and SiteInspire gallery pages are auto-resolved to the real site; Behance, Dribbble, Mobbin, and Designspiration links show a guide.",
   },
   {
     q: "Is Design Oracle free?",
-    a: "The first analyses each week are free. The 3/3 badge under the search bar shows where you stand.",
+    a: "The first analyses each week are free — the badge under the search bar shows where you stand.",
   },
   {
     q: "Which AI coding agents does it work with?",
@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     q: "How are design tokens generated?",
-    a: "Colors, typography, spacing, and component styles are extracted from the page and written as Tailwind config and design tokens.",
+    a: "Colors, typography, spacing, and component styles are extracted and written as Tailwind config and design tokens.",
   },
 ];
 

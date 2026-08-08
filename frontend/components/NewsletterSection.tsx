@@ -19,11 +19,11 @@ export default function NewsletterSection() {
     <section className="news-section">
       <div className="news-card">
         <h2 className="news-title">
-          Something big is <span>brewing</span>
+          First access to{" "}
+          <span>agent-ready design extraction</span>
         </h2>
         <p className="news-desc">
-          Be first in line for agent-ready design extraction, private access,
-          and a few things we&apos;re not ready to show yet.
+          Join the waitlist for private access and early experiments.
         </p>
 
         {joined ? (
