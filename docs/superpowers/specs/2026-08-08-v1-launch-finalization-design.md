@@ -64,7 +64,12 @@ target_url = resolved.get("target_url") or url
   (c'est l'URL que Playwright visite).
 - Si l'URL n'est pas une galerie résolvable → `target_url == url`
   (comportement inchangé).
-- Erreur réseau du résolveur → fallback sur l'URL d'origine, jamais bloquant.
+- **Galerie non résolvable** (behance, dribbble, mobbin, designspiration) :
+  refus explicite — `HTTP 400` « Seuls les sites web en ligne sont
+  analysables. Découvre nos presets ou entre l'URL du site final. » On
+  n'analyse pas la page de galerie elle-même.
+- Erreur réseau du résolveur (galerie résolvable mais fetch échoué) →
+  fallback sur l'URL d'origine, jamais bloquant.
 - L'URL d'origine est conservée dans la réponse API si utile.
 
 ### Tests
@@ -73,7 +78,8 @@ target_url = resolved.get("target_url") or url
   (classification 6 plateformes, extraction 3 stratégies, timeout/erreur
   réseau → `resolvable: False`).
 - `tests/test_analyze_resolver.py` : `/api/analyze` avec URL galerie mockée
-  → la cible résolue est enregistrée. URL non-galerie → inchangée.
+  → la cible résolue est enregistrée. URL non-galerie → inchangée. Galerie
+  non résolvable (behance) → HTTP 400.
 
 ## 2. MCP `get_presets`
 
