@@ -72,3 +72,30 @@ export interface AnalysisResult {
   patterns?: PatternData[];
   design_tokens?: Record<string, unknown>;
 }
+
+export type PlatformKey =
+  | "awwwards"
+  | "siteinspire"
+  | "mobbin"
+  | "behance"
+  | "dribbble"
+  | "designspiration";
+
+export interface InspirationPreset {
+  id: string;
+  title: string;
+  category: string;
+  target_url: string;
+  gallery_url: string;
+  source_platform: PlatformKey;
+  preview_image: string;
+  fallback_image: string;
+  tags: string[];
+}
+
+export interface ResolveResult {
+  platform: string;
+  resolvable: boolean;
+  target_url?: string;
+  message?: string;
+}
