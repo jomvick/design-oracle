@@ -163,6 +163,24 @@ design-oracle/
 └── .env.example
 ```
 
+## Deploy to the public internet (free)
+
+Serve the app from your machine with a free HTTPS URL via Cloudflare Tunnel:
+
+```bash
+./start-public.sh
+```
+
+- Starts the backend stack (`docker compose up -d redis api worker`).
+- Opens a random public `https://<hash>.trycloudflare.com` URL pointed at
+  `http://localhost:3000`.
+- Run the frontend locally first: `cd frontend && npm run dev`.
+- Stop with `Ctrl+C`. The URL changes each run (TryCloudflare ephemeral).
+
+**Note:** the frontend Docker build currently requires the untracked
+`frontend/public/` directory — until it's committed, serve the frontend via
+`npm run dev`.
+
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
