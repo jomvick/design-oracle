@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AiGlow from "@/components/ui/AiGlow";
 import InspirationFilter, { type FilterValue } from "@/components/InspirationFilter";
 import { detectPlatform, resolveGalleryUrl } from "@/lib/urlResolver";
@@ -69,25 +69,25 @@ export default function HeroSearch({
 
       <div className="home-hero-card">
         <div className="home-eyebrow">
-          <Sparkles size={12} strokeWidth={2} />
-          <span>Design Intelligence</span>
+          <span className="home-hero-dot" />
+          <span>Built for AI coding agents</span>
         </div>
 
         <h2 className="home-title">
-          Understand the design
-          <br />
-          behind <span>any website</span>
+          Get a{" "}
+          <span className="home-title-gradient">DESIGN.md</span> from any
+          website
         </h2>
 
         <p className="home-subtitle">
-          Colors, typography, components, and UX patterns — extracted and
-          reconstructed in seconds.
+          Paste a URL to extract a design system. Get a DESIGN.md plus
+          Tailwind v4 and design tokens for your AI agent.
         </p>
 
         <div className={cn("home-input-group", focused && "is-focused")}>
           <input
             type="url"
-            placeholder="https://linear.app"
+            placeholder="Paste paypal.com..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -100,21 +100,22 @@ export default function HeroSearch({
             type="button"
             onClick={submit}
             disabled={loading || !url.trim() || resolving}
+            className="home-pill-btn"
+            aria-label="Analyze"
           >
             {resolving ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Résolution…
-              </>
-            ) : loading ? (
-              "Starting…"
+              <Loader2 size={16} className="animate-spin" />
             ) : (
-              <>
-                Analyze
-                <ArrowRight size={16} />
-              </>
+              "↑"
             )}
           </button>
+        </div>
+
+        <div className="home-quota">
+          <span className="home-quota-dot" />
+          <span className="home-quota-dot" />
+          <span className="home-quota-dot" />
+          <span>3 / 3 free this week</span>
         </div>
 
         {error && <p className="home-error">{error}</p>}
