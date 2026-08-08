@@ -1175,3 +1175,59 @@ a{color:var(--accent);text-decoration:none}
     grid-template-columns:1fr;
   }
 }
+
+/* ─── Design-Extractor landing dark theme ─── */
+.home-shell{
+  position:relative;
+  background:#080808;
+}
+.home-shell::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:80px 80px;
+  background-position:center top;
+}
+.home-shell > *{
+  position:relative;
+  z-index:1;
+}
+.home-gallery-head{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  margin-bottom:22px;
+  text-align:center;
+}
+.home-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:0;
+  padding:5px 11px;
+  border-radius:999px;
+  border:1px solid rgba(139,92,246,.22);
+  background:rgba(139,92,246,.11);
+  color:#bda8ff;
+}
+.home-eyebrow span{
+  font-size:10px;
+  line-height:1;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.home-gallery-title{
+  margin:0;
+  color:#fafafa;
+  font-size:clamp(28px,4vw,40px);
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.02em;
+}
