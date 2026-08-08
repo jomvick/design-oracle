@@ -37,4 +37,5 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt
+      - run: python -m unittest discover -s tests
       - run: python -c "from backend.server import app; from backend.worker import WorkerSettings; print('OK')"

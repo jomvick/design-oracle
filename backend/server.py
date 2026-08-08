@@ -22,6 +22,7 @@ from arq import create_pool
 from arq.connections import RedisSettings
 
 from backend.database import init_db, AsyncSessionLocal, AnalysisModel
+from backend.resolver import resolve_url
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -225,6 +226,15 @@ async def api_analyze(request: Request, payload: AnalyzePayload, db: AsyncSessio
     # Enqueue in ARQ worker queue
     await app.state.redis_pool.enqueue_job('run_analysis_task', analyze_id, url)
     return {"analyze_id": analyze_id, "status": "started"}
+
+@app.post("/api/resolve")
+async def api_resolve(payload: AnalyzePayload):
+    url = payload.url.strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL manquante")
+    if not is_safe_url(url):
+        raise HTTPException(status_code=400, detail="URL invalide ou non autorisée")
+    return await resolve_url(url)
 
 @app.get("/api/analyze/{analyze_id}/events")
 async def api_analyze_events(analyze_id: str, db: AsyncSession = Depends(get_db)):
