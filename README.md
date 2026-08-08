@@ -113,13 +113,26 @@ Each analysis writes to `analyses/{id}/`:
 
 ## MCP Server
 
+The backend exposes the MCP server over HTTP (SSE) at `http://localhost:5000/mcp`,
+or you can run it standalone in stdio mode:
+
 ```bash
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 python3 backend/mcp_server.py
 ```
 
-Configure in your AI tool — see [`opencode.json.example`](opencode.json.example) or [`AGENT_PROMPT.md`](AGENT_PROMPT.md).
+Configure in your AI tool with the HTTP URL (no local paths required):
+
+| Tool | Location | Snippet |
+|------|----------|---------|
+| opencode | `opencode.json` | `{"type": "http", "url": "http://localhost:5000/mcp"}` under `mcpServers.design-oracle` |
+| Cursor | `.cursor/mcp.json` | same shape as opencode |
+| Claude Code | CLI | `claude mcp add design-oracle --transport http http://localhost:5000/mcp` |
+
+Transport is selected with `DESIGN_ORACLE_TRANSPORT` (`stdio` default, `sse`).
+The API base URL is `DESIGN_ORACLE_URL` (default `http://localhost:5000`).
+See [AGENT_PROMPT.md](AGENT_PROMPT.md) for the full per-tool snippets.
 
 ## Project structure
 
@@ -149,6 +162,10 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Known limitations
 
 - Single viewport (1440×900) — multi-device analysis not yet implemented
-- Sites with bot protection (Cloudflare, etc.) may block Playwright
+- Sites with bot protection (Cloudflare, etc.) may block Playwright. The
+  optional `STEALTH_MODE=true` mode injects JS evasions that bypass basic and
+  intermediate protections, but Cloudflare Enterprise, Akamai, and Incapsula may
+  still require CAPTCHA solving or paid residential proxies — not covered.
+  Stealth slightly increases page load time.
 - Component detection uses heuristics, not ML/vision models
 - SQLite storage — suitable for local/single-user; not multi-tenant ready
