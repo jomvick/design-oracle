@@ -1618,3 +1618,33 @@ a{color:var(--accent);text-decoration:none}
 .faq-item{
   background:#12161F;
 }
+
+/* ─── Design Oracle identity — hero accents ─── */
+.home-title-gradient{
+  background:linear-gradient(90deg,#8B5CF6 0%,#6366F1 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.home-pill-btn{
+  border-radius:999px;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);
+  color:#fff;
+  box-shadow:0 10px 24px rgba(91,69,232,.28);
+  font-size:16px;
+}
+.home-pill-btn:hover{
+  background:linear-gradient(135deg,#8b5cf6,#5f5bf0);
+  box-shadow:0 12px 28px rgba(91,69,232,.36);
+}
+.home-input-group .home-pill-btn{
+  border-radius:999px;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);
+  color:#fff;
+}
+.home-input-group .home-pill-btn:hover{
+  background:linear-gradient(135deg,#8b5cf6,#5f5bf0);
+}
+.home-quota-dot{
+  background:#a78bfa;
+}

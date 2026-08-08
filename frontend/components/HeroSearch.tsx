@@ -70,24 +70,24 @@ export default function HeroSearch({
       <div className="home-hero-card">
         <div className="home-eyebrow">
           <span className="home-hero-dot" />
-          <span>Built for AI coding agents</span>
+          <span>Design Intelligence</span>
         </div>
 
         <h2 className="home-title">
-          Get a{" "}
-          <span className="home-title-gradient">DESIGN.md</span> from any
-          website
+          Extract the{" "}
+          <span className="home-title-gradient">design system</span> behind
+          any website
         </h2>
 
         <p className="home-subtitle">
-          Paste a URL to extract a design system. Get a DESIGN.md plus
-          Tailwind v4 and design tokens for your AI agent.
+          Colors, typography, components, and UX patterns — extracted into a
+          DESIGN.md your AI agent can follow.
         </p>
 
         <div className={cn("home-input-group", focused && "is-focused")}>
           <input
             type="url"
-            placeholder="Paste paypal.com..."
+            placeholder="https://linear.app"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -106,7 +106,7 @@ export default function HeroSearch({
             {resolving ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              "↑"
+              "→"
             )}
           </button>
         </div>
@@ -115,7 +115,7 @@ export default function HeroSearch({
           <span className="home-quota-dot" />
           <span className="home-quota-dot" />
           <span className="home-quota-dot" />
-          <span>3 / 3 free this week</span>
+          <span>3 free analyses / week</span>
         </div>
 
         {error && <p className="home-error">{error}</p>}
