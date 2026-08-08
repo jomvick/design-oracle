@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from pathlib import Path
 from .colors import extract_colors
 
@@ -11,6 +12,9 @@ from .layout import (extract_spacing_scale, extract_radius_and_shadows,
 from .patterns import detect_ux_patterns
 from .dna import generate_design_dna
 from backend.generators.tokens import generate_design_tokens_json
+from .stealth import stealth_init_script
+
+STEALTH_MODE = os.getenv("STEALTH_MODE", "false").lower() in ("true", "1", "yes")
 
 async def run_analysis(url: str, progress_callback=None):
     from playwright.async_api import async_playwright
@@ -38,6 +42,8 @@ async def run_analysis(url: str, progress_callback=None):
                 "Chrome/120.0.0.0 Safari/537.36"
             ),
         )
+        if STEALTH_MODE:
+            await context.add_init_script(stealth_init_script())
         page = await context.new_page()
 
         progress("navigate", 8, "Navigating to page...")
