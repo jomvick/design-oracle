@@ -1,35 +1,33 @@
 const STEPS = [
   {
     num: "01",
-    title: "Extract any site",
-    desc: "Paste a URL. Get a DESIGN.md with colors, typography, components, and layout specs.",
+    title: "Extract",
+    desc: "Paste a URL. We pull colors, typography, components, and layout specs into a DESIGN.md.",
   },
   {
     num: "02",
-    title: "Save it anywhere",
-    desc: "Drop DESIGN.md directly into your repo root alongside your existing prompt files.",
+    title: "Export",
+    desc: "Download DESIGN.md, design tokens, and Tailwind config for your repo.",
   },
   {
     num: "03",
-    title: "Point your agent at it",
-    desc: "Tell your AI coding agent to use DESIGN.md as its visual style guide. That's it.",
+    title: "Point your agent",
+    desc: "Drop them in your project and let your AI agent match your design system.",
   },
 ];
 
 /**
- * Section « How it works » — 3 étapes Extract / Save / Point your agent.
+ * Section « How it works » — 3 étapes Extract / Export / Point your agent.
  */
 export default function WorkflowSection() {
   return (
     <section className="work-section">
       <div className="work-head">
         <span className="home-eyebrow">
-          <span>Works with your agent</span>
+          <span>Design Intelligence</span>
         </span>
         <h2 className="work-title">
-          Drop DESIGN.md into your repo.
-          <br />
-          Your agent does the rest.
+          From URL to design system in minutes
         </h2>
       </div>
 
