@@ -134,6 +134,18 @@ Transport is selected with `DESIGN_ORACLE_TRANSPORT` (`stdio` default, `sse`).
 The API base URL is `DESIGN_ORACLE_URL` (default `http://localhost:5000`).
 See [AGENT_PROMPT.md](AGENT_PROMPT.md) for the full per-tool snippets.
 
+### Lightweight CLI (`uvx`)
+
+A thin MCP client that calls the backend over HTTP — no Playwright/Chromium:
+
+```bash
+uvx design-oracle-mcp
+```
+
+The package is published on PyPI as `design-oracle-mcp`. Source lives in
+`clients/design-oracle-mcp/`. Set `DESIGN_ORACLE_URL` if the backend is not at
+`http://localhost:5000`.
+
 ## Project structure
 
 ```
