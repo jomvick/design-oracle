@@ -22,6 +22,7 @@ from arq import create_pool
 from arq.connections import RedisSettings
 
 from backend.database import init_db, AsyncSessionLocal, AnalysisModel
+from backend.mcp_server import mcp as mcp_app
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -152,7 +153,8 @@ async def lifespan(app: FastAPI):
     app.state.redis_pool = await create_pool(RedisSettings(host=REDIS_HOST, port=REDIS_PORT))
     app.state.redis_client = await aioredis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True)
     logger.info("FastAPI resources initialized.")
-    yield
+    async with mcp_http_app.lifespan(mcp_http_app):
+        yield
     # Cleanup Redis
     await app.state.redis_pool.close()
     await app.state.redis_client.close()
@@ -167,6 +169,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+mcp_http_app = mcp_app.http_app(transport="streamable-http")
+app.mount("/mcp", mcp_http_app)
 
 # --- API Routes ---
 

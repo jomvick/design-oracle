@@ -12,6 +12,7 @@ BASE = Path(__file__).resolve().parent.parent
 ANALYSES_DIR = BASE / "analyses"
 
 BASE_URL = os.getenv("DESIGN_ORACLE_URL", "http://localhost:5000")
+TRANSPORT = os.getenv("DESIGN_ORACLE_TRANSPORT", "stdio")
 
 mcp = FastMCP("design-oracle")
 
@@ -35,13 +36,25 @@ def _list_analyses():
 @mcp.resource("designoracle://{analyze_id}/{filename}")
 def get_analysis_file(analyze_id: str, filename: str) -> str:
     """Get a specific analysis file (DESIGN.md, tailwind.config.js, components.jsx, design-tokens.json, result.json)"""
-    if filename not in ("DESIGN.md", "tailwind.config.js", "components.jsx", "design-tokens.json", "result.json"):
+    allowed = ("DESIGN.md", "tailwind.config.js", "components.jsx", "design-tokens.json", "result.json")
+    if filename not in allowed:
         raise ValueError(f"Unauthorized or invalid filename: {filename}")
-    
-    filepath = ANALYSES_DIR / analyze_id / filename
-    if not filepath.exists():
-        raise FileNotFoundError(f"File not found: {filename} for analysis {analyze_id}")
-    return filepath.read_text(encoding="utf-8")
+
+    if filename == "result.json":
+        path = f"/api/analyze/{analyze_id}/result"
+    elif filename == "design-tokens.json":
+        path = f"/api/analyze/{analyze_id}/export/tokens"
+    else:
+        route = {
+            "DESIGN.md": "design.md",
+            "tailwind.config.js": "tailwind",
+            "components.jsx": "components",
+        }[filename]
+        path = f"/api/analyze/{analyze_id}/export/{route}"
+
+    r = httpx.get(_api_url(path), timeout=10)
+    r.raise_for_status()
+    return r.text
 
 
 
@@ -102,4 +115,4 @@ def export_components(analyze_id: str) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport=TRANSPORT)
