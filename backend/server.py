@@ -518,6 +518,14 @@ async def api_designs(db: AsyncSession = Depends(get_db)):
         })
     return designs
 
+PRESETS_FILE = Path(__file__).resolve().parent / "data" / "inspirations.json"
+
+@app.get("/api/presets")
+async def api_presets():
+    if not PRESETS_FILE.exists():
+        return []
+    return json.loads(PRESETS_FILE.read_text(encoding="utf-8"))
+
 if __name__ == "__main__":
     import uvicorn
     reload = os.getenv("UVICORN_RELOAD", "1") == "1"
