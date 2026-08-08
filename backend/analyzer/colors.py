@@ -2,6 +2,8 @@ import re
 import math
 from bs4 import BeautifulSoup
 
+from .layout import visible_element_filter_js
+
 COLOR_NAMES = {
     "aliceblue": "#f0f8ff", "antiquewhite": "#faebd7", "aqua": "#00ffff",
     "aquamarine": "#7fffd4", "azure": "#f0ffff", "beige": "#f5f5dc",
@@ -231,7 +233,7 @@ def classify_semantic_color(hex_color: str, all_hex: list[str]) -> str:
 
 
 async def extract_colors(page, html: str) -> dict:
-    js_colors = await page.evaluate("""() => {
+    js_colors = await page.evaluate(visible_element_filter_js() + """() => {
         const colors = {};
         const props = ['color','background-color','background','border-color',
                        'border-top-color','border-bottom-color','border-left-color',
@@ -241,6 +243,7 @@ async def extract_colors(page, html: str) -> dict:
         const seen = new Set();
         const compStyles = new Map();
         els.forEach(el => {
+            if (!relevant(el)) return;
             try {
                 const cs = getComputedStyle(el);
                 props.forEach(prop => {
