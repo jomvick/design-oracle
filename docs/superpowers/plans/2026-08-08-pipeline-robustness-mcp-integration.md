@@ -32,7 +32,7 @@
 - Produces: `parse_color(raw: str) -> dict | None` returning `{"hex": str, "alpha": float | None, "raw": str}`; `normalize_color(raw: str) -> str | None` (unchanged signature, extended inputs); `hsl_to_rgb(h, s, l) -> tuple[int, int, int]`.
 - Consumes: nothing new.
 
-- [ ] **Step 1: Create test infra + failing tests**
+- [x] **Step 1: Create test infra + failing tests**
 
 `requirements-dev.txt`:
 ```
@@ -90,12 +90,12 @@ def test_normalize_invalid_returns_none():
     assert parse_color("") is None
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `source .venv/bin/activate && pip install -q -r requirements-dev.txt && pytest tests/test_colors.py -v`
 Expected: FAIL — `ImportError: cannot import name 'parse_color' from 'backend.analyzer.colors'`.
 
-- [ ] **Step 3: Implement color parsing in colors.py**
+- [x] **Step 3: Implement color parsing in colors.py**
 
 Replace the `normalize_color` block (lines 62-81) with:
 
@@ -162,12 +162,12 @@ def normalize_color(raw: str) -> str | None:
     return c["hex"] if c else None
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/test_colors.py -v`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add requirements-dev.txt tests/ backend/analyzer/colors.py
@@ -188,7 +188,7 @@ git commit -m "feat: parse rgba/hsl colors with alpha preservation"
 - Produces: `visible_element_filter_js() -> str` (module function in `layout.py`) that returns a JS snippet defining `isVisible(el)`, `isSemantic(el)`, `relevant(el)`. Imported by `colors.py` and `typography.py`.
 - Consumes: `parse_color` (Task 1) indirectly via existing `extract_colors` flow.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_layout_filter.py`:
 ```python
@@ -215,12 +215,12 @@ def test_filter_skips_hidden():
     assert "offsetParent" in js
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_layout_filter.py -v`
 Expected: FAIL — `AttributeError: module 'backend.analyzer.layout' has no attribute 'visible_element_filter_js'`.
 
-- [ ] **Step 3: Add the helper to layout.py**
+- [x] **Step 3: Add the helper to layout.py**
 
 Add at the top of `backend/analyzer/layout.py`, after the imports:
 
@@ -246,7 +246,7 @@ def visible_element_filter_js() -> str:
     """
 ```
 
-- [ ] **Step 4: Apply the filter in the 4 layout.py JS passes**
+- [x] **Step 4: Apply the filter in the 4 layout.py JS passes**
 
 **extract_spacing_scale** — change line 11-12 from `js = """() => {` to `js = visible_element_filter_js() + """() => {`, and add the guard inside the loop right after `els.forEach(el => {` (line 17):
 
@@ -347,7 +347,7 @@ async def analyze_layout(page, html: str) -> dict:
     }""")
 ```
 
-- [ ] **Step 5: Apply the filter in colors.py**
+- [x] **Step 5: Apply the filter in colors.py**
 
 Add import at top of `backend/analyzer/colors.py`:
 
@@ -388,7 +388,7 @@ async def extract_colors(page, html: str) -> dict:
     }""")
 ```
 
-- [ ] **Step 6: Apply the filter in typography.py**
+- [x] **Step 6: Apply the filter in typography.py**
 
 Add import at top of `backend/analyzer/typography.py`:
 
@@ -434,12 +434,12 @@ async def extract_typography(page) -> dict:
     }""")
 ```
 
-- [ ] **Step 7: Run tests to verify they pass + import check**
+- [x] **Step 7: Run tests to verify they pass + import check**
 
 Run: `pytest tests/test_layout_filter.py tests/test_colors.py -v && python -c "from backend.analyzer import core; print('OK')"`
 Expected: PASS for all tests; `OK` printed (validates no import cycle between colors/layout/typography).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/analyzer/layout.py backend/analyzer/colors.py backend/analyzer/typography.py tests/test_layout_filter.py
@@ -460,7 +460,7 @@ git commit -m "feat: filter getComputedStyle passes to visible semantic elements
 - Produces: `stealth_init_script() -> str` (JS evasions string). `core.py` uses it before creating the page.
 - Consumes: nothing.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_stealth.py`:
 ```python
@@ -486,12 +486,12 @@ def test_stealth_uses_headless_proof_js_syntax():
     assert stealth_init_script().strip().endswith("}")
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_stealth.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'backend.analyzer.stealth'`.
 
-- [ ] **Step 3: Create stealth.py**
+- [x] **Step 3: Create stealth.py**
 
 `backend/analyzer/stealth.py`:
 ```python
@@ -519,7 +519,7 @@ WebGLRenderingContext.prototype.getParameter = function(param) {
 """
 ```
 
-- [ ] **Step 4: Wire stealth into core.py**
+- [x] **Step 4: Wire stealth into core.py**
 
 Add import at top of `backend/analyzer/core.py`:
 
@@ -541,7 +541,7 @@ Inside `run_analysis`, after `context = await browser.new_context(...)` (line 33
             await context.add_init_script(stealth_init_script())
 ```
 
-- [ ] **Step 5: Add env var to .env.example**
+- [x] **Step 5: Add env var to .env.example**
 
 Append to `backend/../.env.example` (repo root `.env.example`):
 
@@ -550,12 +550,12 @@ Append to `backend/../.env.example` (repo root `.env.example`):
 STEALTH_MODE=false
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `pytest tests/test_stealth.py -v`
 Expected: all PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/analyzer/stealth.py backend/analyzer/core.py .env.example tests/test_stealth.py
@@ -577,7 +577,7 @@ git commit -m "feat: add STEALTH_MODE init-script evasions for basic bot protect
 - Produces: `TIMEOUT_SECONDS` (int, default 30) in `core.py`; `WorkerSettings.job_timeout` (int, default 180); `SSE_MAX_POLLS` derived ≥ `ARQ_JOB_TIMEOUT_SECONDS / SSE_POLL_INTERVAL`; helper `_record_failed(ctx, analyze_id, message)` in `worker.py`.
 - Consumes: `stealth_init_script` + `STEALTH_MODE` (Task 3).
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_timeouts.py`:
 ```python
@@ -610,12 +610,12 @@ def test_core_timout_seconds_default():
     assert c.TIMEOUT_SECONDS == 30
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_timeouts.py -v`
 Expected: FAIL — worker `job_timeout` attribute missing; `SSE_MAX_POLLS` is still hardcoded 3000 (3000*0.1=300 >= 180 passes, but the worker assertion fails first).
 
-- [ ] **Step 3: Rework core.py with try/finally + env-driven timeouts**
+- [x] **Step 3: Rework core.py with try/finally + env-driven timeouts**
 
 Full replacement of `backend/analyzer/core.py`:
 
@@ -785,7 +785,7 @@ async def run_analysis(url: str, progress_callback=None):
 
 Note: `page_title`, `final_url`, `screenshot_bytes`, `overlay_bytes`, `component_boxes`, `colors_data`, etc. are only defined on the success path; if an exception propagates, the `finally` closes the browser and the exception re-raises to the worker — that is the desired behavior (no zombies).
 
-- [ ] **Step 4: Add job_timeout + failed status to worker.py**
+- [x] **Step 4: Add job_timeout + failed status to worker.py**
 
 Add env read at top of `backend/worker.py` (after line 20):
 
@@ -850,7 +850,7 @@ class WorkerSettings:
     job_timeout = ARQ_JOB_TIMEOUT_SECONDS
 ```
 
-- [ ] **Step 5: Derive SSE_MAX_POLLS in server.py**
+- [x] **Step 5: Derive SSE_MAX_POLLS in server.py**
 
 In `backend/server.py`, replace lines 35-36:
 
@@ -867,7 +867,7 @@ ARQ_JOB_TIMEOUT_SECONDS = int(os.getenv("ARQ_JOB_TIMEOUT_SECONDS", "180"))
 SSE_MAX_POLLS = int(ARQ_JOB_TIMEOUT_SECONDS / SSE_POLL_INTERVAL) + 100
 ```
 
-- [ ] **Step 6: Update .env.example**
+- [x] **Step 6: Update .env.example**
 
 Append:
 
@@ -877,17 +877,17 @@ TIMEOUT_SECONDS=30
 ARQ_JOB_TIMEOUT_SECONDS=180
 ```
 
-- [ ] **Step 7: Run tests to verify they pass**
+- [x] **Step 7: Run tests to verify they pass**
 
 Run: `pytest tests/test_timeouts.py -v`
 Expected: all PASS.
 
-- [ ] **Step 8: Verify no import regressions**
+- [x] **Step 8: Verify no import regressions**
 
 Run: `python -c "from backend.server import app; from backend.worker import WorkerSettings; print('OK', WorkerSettings.job_timeout)"`
 Expected: `OK 180`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add backend/analyzer/core.py backend/worker.py backend/server.py .env.example tests/test_timeouts.py
@@ -908,7 +908,7 @@ git commit -m "feat: align timeouts across Playwright/ARQ/SSE and guarantee brow
 - Produces: `mcp` FastMCP instance in `backend/mcp_server.py`; `DESIGN_ORACLE_TRANSPORT` env (`stdio` | `sse`); resource `designoracle://{id}/{file}` resolved via HTTP.
 - Consumes: nothing from prior tasks.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_mcp.py`:
 ```python
@@ -935,14 +935,14 @@ def test_resource_goes_through_api(monkeypatch):
     assert "/api/analyze/abc12345/result" in calls["url"]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pip install -q fastapi[standard] 2>/dev/null; pytest tests/test_mcp.py -v`
 Expected: FAIL — `/mcp` not mounted; resource still reads local disk.
 
 Note: `httpx` and `fastmcp` are already in `backend/requirements.txt`. `TestClient` needs `httpx` (already present).
 
-- [ ] **Step 3: Add transport selector + API-backed resource to mcp_server.py**
+- [x] **Step 3: Add transport selector + API-backed resource to mcp_server.py**
 
 Replace the resource handler (lines 35-44) in `backend/mcp_server.py`:
 
@@ -977,15 +977,15 @@ Add transport handling at the bottom, replacing the `__main__` block (lines 104-
 TRANSPORT = os.getenv("DESIGN_ORACLE_TRANSPORT", "stdio")
 
 
-def sse_app():
-    return mcp.sse_app()
-
-
 if __name__ == "__main__":
     mcp.run(transport=TRANSPORT)
 ```
 
-- [ ] **Step 4: Mount the MCP app in server.py**
+> **Deviation (FastMCP 3.x):** `mcp.sse_app()` was removed. The HTTP surface is
+> `mcp.http_app(transport="streamable-http", path="/")` (internal path `/` so
+> that mounting at `/mcp` exposes the endpoint at `http://host/mcp`).
+
+- [x] **Step 4: Mount the MCP app in server.py**
 
 Add import at top of `backend/server.py`:
 
@@ -996,10 +996,18 @@ from backend.mcp_server import mcp as mcp_app
 After `app.add_middleware(...)` block (line 168), add:
 
 ```python
-app.mount("/mcp", mcp_app.sse_app())
+mcp_http_app = mcp_app.http_app(transport="streamable-http", path="/")
+app.mount("/mcp", mcp_http_app)
 ```
 
-- [ ] **Step 5: Add env var to .env.example**
+And in the app lifespan, chain the FastMCP lifespan so its task group runs:
+
+```python
+async with mcp_http_app.lifespan(mcp_http_app):
+    yield
+```
+
+- [x] **Step 5: Add env var to .env.example**
 
 Append:
 
@@ -1008,17 +1016,17 @@ Append:
 DESIGN_ORACLE_TRANSPORT=stdio
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `pytest tests/test_mcp.py -v`
 Expected: both PASS.
 
-- [ ] **Step 7: Verify server boots with mount**
+- [x] **Step 7: Verify server boots with mount**
 
 Run: `python -c "from backend.server import app; print(len(app.routes))"`
 Expected: a number ≥ 1, no exceptions.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add backend/mcp_server.py backend/server.py .env.example tests/test_mcp.py
@@ -1038,7 +1046,7 @@ git commit -m "feat: MCP SSE transport, /mcp mount, and API-backed resources"
 - Consumes: `/mcp` mount and `DESIGN_ORACLE_URL`/`DESIGN_ORACLE_TRANSPORT` env semantics (Task 5).
 - Produces: doc-only; no code.
 
-- [ ] **Step 1: Update opencode.json.example**
+- [x] **Step 1: Update opencode.json.example**
 
 Replace the file contents with:
 
@@ -1053,7 +1061,7 @@ Replace the file contents with:
 }
 ```
 
-- [ ] **Step 2: Add multi-editor snippets to AGENT_PROMPT.md**
+- [x] **Step 2: Add multi-editor snippets to AGENT_PROMPT.md**
 
 Replace the final JSON code block (lines 46-60) with the following section:
 
@@ -1118,7 +1126,7 @@ Only if the backend is not reachable over HTTP:
 ```
 ````
 
-- [ ] **Step 3: Update README.md MCP section**
+- [x] **Step 3: Update README.md MCP section**
 
 Replace the `## MCP Server` section (lines 114-122) with:
 
@@ -1147,7 +1155,7 @@ The API base URL is `DESIGN_ORACLE_URL` (default `http://localhost:5000`).
 See [AGENT_PROMPT.md](AGENT_PROMPT.md) for the full per-tool snippets.
 ````
 
-- [ ] **Step 4: Add anti-bot limitations to README.md**
+- [x] **Step 4: Add anti-bot limitations to README.md**
 
 In the `## Known limitations` section (line 149), replace the line:
 
@@ -1165,12 +1173,12 @@ with:
   Stealth slightly increases page load time.
 ```
 
-- [ ] **Step 5: Verify docs render**
+- [x] **Step 5: Verify docs render**
 
 Run: `grep -n "claude mcp add" AGENT_PROMPT.md README.md && grep -n '"type": "http"' opencode.json.example`
 Expected: matches in both files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add opencode.json.example AGENT_PROMPT.md README.md
@@ -1193,7 +1201,7 @@ git commit -m "docs: multi-editor MCP configs and honest anti-bot limitations"
 - Produces: `design-oracle-mcp` console entry point; module `design_oracle_mcp.server` with `main()` and a FastMCP instance named `mcp`.
 - Consumes: backend HTTP API only (no Playwright).
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `tests/test_cli_package.py`:
 ```python
@@ -1212,12 +1220,12 @@ def test_package_has_tools():
             "export_design_md", "export_tailwind", "export_components"} <= names
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_cli_package.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'design_oracle_mcp'`.
 
-- [ ] **Step 3: Create the package files**
+- [x] **Step 3: Create the package files**
 
 `clients/design-oracle-mcp/pyproject.toml`:
 ```toml
@@ -1367,17 +1375,17 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/test_cli_package.py -v`
 Expected: all PASS (conftest adds `clients/design-oracle-mcp` to `sys.path`).
 
-- [ ] **Step 5: Verify the console script installs**
+- [x] **Step 5: Verify the console script installs**
 
 Run: `pip install -e ./clients/design-oracle-mcp && which design-oracle-mcp && design-oracle-mcp --help`
 Expected: path to `design-oracle-mcp` printed. (`--help` output behavior depends on FastMCP; if it starts a server instead, Ctrl+C and treat the install as verified.)
 
-- [ ] **Step 6: Update root README.md**
+- [x] **Step 6: Update root README.md**
 
 Add a subsection under `## MCP Server`:
 
@@ -1395,7 +1403,7 @@ The package is published on PyPI as `design-oracle-mcp`. Source lives in
 `http://localhost:5000`.
 ````
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add clients/design-oracle-mcp tests/test_cli_package.py README.md
@@ -1412,22 +1420,22 @@ git commit -m "feat: publish design-oracle-mcp lightweight MCP client (PyPI)"
 **Interfaces:**
 - Consumes: everything.
 
-- [ ] **Step 1: Run full backend test suite**
+- [x] **Step 1: Run full backend test suite**
 
 Run: `pytest tests/ -v`
 Expected: all tests PASS (colors, layout filter, stealth, timeouts, mcp, cli package).
 
-- [ ] **Step 2: Run backend import/CI check**
+- [x] **Step 2: Run backend import/CI check**
 
 Run: `python -c "from backend.server import app; from backend.worker import WorkerSettings; print('OK')"`
 Expected: `OK`.
 
-- [ ] **Step 3: Run frontend lint + build (unchanged surface)**
+- [x] **Step 3: Run frontend lint + build (unchanged surface)**
 
 Run: `npm run lint --prefix frontend && npm run build --prefix frontend`
 Expected: lint clean, build succeeds (frontend is untouched by this plan).
 
-- [ ] **Step 4: Manual smoke — verify a real analysis completes**
+- [x] **Step 4: Manual smoke — verify a real analysis completes**
 
 If a stack is available (`podman compose up --build -d` or `./start.sh`):
 
@@ -1442,6 +1450,6 @@ then poll `GET /api/analyze/{id}/status` until `status` is `complete` or `error`
 pgrep -af chromium | grep -v grep || echo "no chromium processes"
 ```
 
-- [ ] **Step 5: No-op commit guard**
+- [x] **Step 5: No-op commit guard**
 
 If any stray file was touched, clean it up (`git status --short` should list only intended files from the tasks above). Do not commit unless a change is outstanding.
